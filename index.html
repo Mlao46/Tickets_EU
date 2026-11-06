@@ -120,7 +120,9 @@
   <input id="a_key" type="password" autocomplete="off" placeholder="sk-ant-…">
   <div class="ayuda">Se guarda solo en este móvil. Se crea en console.anthropic.com → API Keys.</div>
   <label class="campo" for="a_modelo">Modelo</label>
-  <input id="a_modelo" autocomplete="off">
+  <input id="a_modelo" autocomplete="off" list="dlModelos">
+  <datalist id="dlModelos"><option value="claude-haiku-5-5"><option value="claude-sonnet-5-5"></datalist>
+  <div class="ayuda">claude-haiku-5-5 (más barato) o claude-sonnet-5-5 (más preciso).</div>
   <label class="campo" for="a_oficina">Ciudades de la oficina (para "Comida Oficina")</label>
   <input id="a_oficina">
   <hr>
@@ -341,7 +343,7 @@ async function leerTicketIA(fotoBlob){
     },
     body: JSON.stringify({
       model: ajustes.modelo || AJUSTES_DEF.modelo,
-      max_tokens: 400,
+      max_tokens: 2000,
       messages:[{role:'user', content:[
         {type:'image', source:{type:'base64', media_type:'image/jpeg', data}},
         {type:'text', text: promptIA()}
@@ -355,9 +357,13 @@ async function leerTicketIA(fotoBlob){
   }
   const j = await resp.json();
   const txt = (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
-  const m = txt.match(/\{[\s\S]*\}/);
-  if(!m) throw new Error('La IA no devolvió datos legibles');
-  return JSON.parse(m[0]);
+  const ini = txt.indexOf('{'), fin = txt.lastIndexOf('}');
+  if(ini<0 || fin<=ini){
+    const tipos = (j.content||[]).map(c=>c.type).join(',') || 'ninguno';
+    throw new Error(`respuesta sin datos (fin: ${j.stop_reason||'?'}, bloques: ${tipos}, modelo: ${j.model||'?'}). Texto: «${txt.slice(0,160) || '(vacío)'}»`);
+  }
+  try{ return JSON.parse(txt.slice(ini, fin+1)); }
+  catch(e){ throw new Error('JSON no válido: «'+txt.slice(ini, ini+160)+'»'); }
 }
 
 // ---------- Editor ----------
