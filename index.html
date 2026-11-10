@@ -1,119 +1,153 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-tema="oscuro">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#2f6b1f">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1311" id="metaTema">
+<meta name="color-scheme" content="dark light">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Tickets Gastos</title>
+<script>try{const a=JSON.parse(localStorage.getItem('ajustes')||'{}');const t=a.tema||'oscuro';document.documentElement.dataset.tema=(t==='sistema'?(matchMedia('(prefers-color-scheme: light)').matches?'claro':'oscuro'):t);}catch(e){}</script>
 <style>
-  :root{--verde:#2f6b1f;--verde2:#e6f0df;--gris:#6b7280;--borde:#e5e7eb;--rojo:#b91c1c;--fondo:#f6f7f5;--ambar:#fef3c7;--ambar2:#92400e}
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--fondo);color:#111;padding-bottom:150px}
-  header{position:sticky;top:0;z-index:5;background:var(--verde);color:#fff;padding:10px 14px 12px}
-  header h1{font-size:19px;margin:0;font-weight:650}
-  .fila{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  header .fila+.fila{margin-top:8px}
-  header input[type=month]{font-size:16px;padding:6px 8px;border-radius:8px;border:0}
-  #totalMes{font-size:18px;font-weight:700}
-  .icono{background:transparent;border:0;color:#fff;font-size:22px;padding:4px 6px}
-  #red{font-size:12px;background:rgba(255,255,255,.18);padding:3px 8px;border-radius:10px;display:none}
-  main{padding:8px 10px}
-  .aviso{background:#fff;border:1px solid var(--borde);border-left:5px solid var(--verde);border-radius:12px;padding:10px 12px;margin:8px 0}
-  .aviso.pend{border-left-color:#d97706}
+  :root,[data-tema=oscuro]{
+    --bg:#0e1311;--card:#171e1b;--card2:#1f2824;--linea:#28332e;--texto:#e9efeb;--suave:#93a39a;
+    --acento:#4fbf6a;--acentoT:#06210f;--acento2:#173322;--ambar:#f5a524;--ambar2:#3a2a0b;--rojo:#f87171;--rojo2:#3b1515;
+    --sombra:0 8px 24px rgba(0,0,0,.45);
+  }
+  [data-tema=claro]{
+    --bg:#f3f5f4;--card:#ffffff;--card2:#eef2f0;--linea:#e1e7e4;--texto:#14201a;--suave:#5f6f67;
+    --acento:#2f8a47;--acentoT:#ffffff;--acento2:#e3f3e8;--ambar:#c47a00;--ambar2:#fff3dc;--rojo:#b91c1c;--rojo2:#fde8e8;
+    --sombra:0 8px 24px rgba(0,0,0,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg)}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--texto);padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+  button{font-family:inherit;color:inherit}
+  /* Cabecera */
+  header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) 16px 8px}
+  .top{display:flex;align-items:center;justify-content:space-between}
+  .marca{font-size:15px;color:var(--suave);font-weight:600;display:flex;align-items:center;gap:8px}
+  .ver{font-size:11px;border:1px solid var(--linea);border-radius:8px;padding:1px 6px}
+  #red{font-size:12px;background:var(--ambar2);color:var(--ambar);padding:3px 8px;border-radius:10px;display:none}
+  .icono{background:transparent;border:0;font-size:22px;padding:6px;color:var(--suave)}
+  .mesNav{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+  .mesNav button.flecha{width:42px;height:42px;border-radius:50%;border:1px solid var(--linea);background:var(--card);font-size:20px}
+  #mesTitulo{font-size:22px;font-weight:750;background:none;border:0;padding:6px 10px}
+  main{padding:4px 14px}
+  /* Resumen */
+  .resumen{background:linear-gradient(135deg,var(--acento2),var(--card));border:1px solid var(--linea);border-radius:20px;padding:16px 18px;margin:8px 0 14px}
+  .resumen .lbl{font-size:13px;color:var(--suave)}
+  .resumen .total{font-size:34px;font-weight:800;letter-spacing:-.5px;margin:2px 0}
+  .resumen .sub{font-size:13px;color:var(--suave)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .chip{font-size:13px;background:var(--card2);border:1px solid var(--linea);border-radius:999px;padding:5px 10px;white-space:nowrap}
+  /* Avisos */
+  .aviso{background:var(--card);border:1px solid var(--linea);border-left:4px solid var(--acento);border-radius:16px;padding:12px;margin:0 0 12px}
+  .aviso.pend{border-left-color:var(--ambar)}
   .aviso h3{margin:0 0 4px;font-size:15px}
-  .aviso p{margin:0;font-size:13px;color:var(--gris)}
-  .dia{margin:12px 0 4px;display:flex;justify-content:space-between;color:var(--gris);font-size:13px;font-weight:600;text-transform:capitalize;padding:0 4px}
-  .ticket{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--borde);border-radius:12px;padding:10px;margin:6px 0}
-  .ticket.revisar{border:2px solid #f59e0b;background:#fffbeb}
-  .num{min-width:34px;height:34px;border-radius:50%;background:var(--verde2);color:var(--verde);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
-  .num.suma{background:var(--ambar);color:var(--ambar2)}
-  .num.pend{background:#e5e7eb;color:#374151}
+  .aviso p{margin:0 0 6px;font-size:13px;color:var(--suave)}
+  /* Lista */
+  .dia{margin:16px 2px 6px;display:flex;justify-content:space-between;color:var(--suave);font-size:13px;font-weight:650;text-transform:capitalize}
+  .ticket{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--linea);border-radius:16px;padding:10px 12px;margin:8px 0}
+  .ticket:active{background:var(--card2)}
+  .ticket.revisar{border-color:var(--ambar);box-shadow:inset 0 0 0 1px var(--ambar)}
+  .mini{width:46px;height:46px;border-radius:12px;flex:none;background:var(--card2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative}
+  .mini .cat{position:absolute;right:-6px;bottom:-6px;font-size:14px;background:var(--card);border:1px solid var(--linea);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
   .info{flex:1;min-width:0}
-  .info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .info small{color:var(--gris);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .etq{display:inline-block;font-size:11px;font-weight:700;background:#f59e0b;color:#fff;border-radius:6px;padding:1px 6px;margin-right:4px;vertical-align:1px}
-  .imp{font-weight:700;white-space:nowrap}
-  .flechas{display:flex;flex-direction:column}
-  .flechas button{border:0;background:transparent;font-size:15px;padding:2px 6px;color:var(--gris)}
-  .vacio{text-align:center;color:var(--gris);margin-top:40px;line-height:1.5}
-  .barra{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--borde);padding:10px;display:grid;gap:8px;z-index:5}
-  .botones{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
-  .botones2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:600;padding:12px 8px;border-radius:12px;border:1px solid var(--borde);background:#fff;color:#111;cursor:pointer;text-align:center;font-family:inherit}
-  .btn.prim{background:var(--verde);color:#fff;border-color:var(--verde)}
-  .btn.peq{padding:9px 8px;font-size:14px;font-weight:500}
-  .btn.rojo{color:var(--rojo);border-color:#fecaca}
-  dialog{border:0;border-radius:16px;padding:0;width:min(560px,96vw);max-height:92vh}
-  dialog::backdrop{background:rgba(0,0,0,.45)}
-  .dlg{padding:16px;overflow:auto;max-height:92vh}
-  .dlg h2{margin:0 0 10px;font-size:18px}
-  label.campo{display:block;font-size:13px;color:var(--gris);margin:10px 0 3px}
-  .dlg input,.dlg select{width:100%;font-size:16px;padding:10px;border:1px solid #d1d5db;border-radius:10px;background:#fff;font-family:inherit}
+  .info b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .info small{color:var(--suave);display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .der{text-align:right;flex:none}
+  .imp{font-weight:750;font-size:15px;white-space:nowrap}
+  .num{display:inline-block;margin-top:4px;font-size:11px;font-weight:700;border-radius:8px;padding:2px 7px;background:var(--acento2);color:var(--acento)}
+  .num.suma{background:var(--ambar2);color:var(--ambar)}
+  .num.pend{background:var(--card2);color:var(--suave)}
+  .etq{display:inline-block;font-size:10px;font-weight:800;background:var(--ambar);color:#1b1200;border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:2px}
+  .flechas{display:flex;flex-direction:column;margin-right:-4px}
+  .flechas button{border:0;background:transparent;font-size:13px;padding:3px 4px;color:var(--suave)}
+  .vacio{text-align:center;color:var(--suave);margin:50px 20px;line-height:1.6}
+  .vacio .gr{font-size:46px}
+  /* Barra inferior */
+  .barra{position:fixed;left:0;right:0;bottom:0;z-index:6;background:linear-gradient(to top,var(--bg) 70%,transparent);padding:18px 18px calc(14px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .lateral{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--card);border:1px solid var(--linea);border-radius:16px;padding:9px 4px;font-size:12px;color:var(--suave);font-weight:600}
+  .lateral span{font-size:20px}
+  .fab{flex:1.5;white-space:nowrap;padding:0 10px;display:flex;align-items:center;justify-content:center;gap:8px;height:60px;border-radius:20px;background:var(--acento);color:var(--acentoT);font-size:16px;font-weight:750;border:0;box-shadow:var(--sombra)}
+  .fab span{font-size:22px}
+  /* Hojas y diálogos */
+  dialog{border:0;padding:0;background:var(--card);color:var(--texto);width:100%;max-width:560px;max-height:92vh;margin:auto auto 0;border-radius:22px 22px 0 0}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .dlg{padding:10px 18px calc(18px + env(safe-area-inset-bottom));overflow:auto;max-height:92vh}
+  .tirador{width:40px;height:5px;border-radius:3px;background:var(--linea);margin:2px auto 12px}
+  .dlg h2{margin:0 0 10px;font-size:19px}
+  label.campo{display:block;font-size:13px;color:var(--suave);margin:12px 0 4px}
+  .dlg input,.dlg select{width:100%;font-size:16px;padding:12px;border:1px solid var(--linea);border-radius:12px;background:var(--card2);color:var(--texto);font-family:inherit}
+  .dlg input:focus,.dlg select:focus{outline:2px solid var(--acento);border-color:transparent}
   .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  #fotoPrev{width:100%;max-height:220px;object-fit:contain;background:#111;border-radius:10px;display:none}
-  #estadoIA{font-size:14px;margin-top:8px;padding:8px 10px;border-radius:8px;background:#f3f4f6;display:none}
-  #estadoIA.ok{background:var(--verde2)}#estadoIA.err{background:#fee2e2;color:var(--rojo)}#estadoIA.pend{background:var(--ambar);color:var(--ambar2)}
-  .acc{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  #fotoPrev{width:100%;max-height:230px;object-fit:contain;background:#000;border-radius:14px;display:none}
+  #estadoIA{font-size:14px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--card2);display:none;line-height:1.4}
+  #estadoIA.ok{background:var(--acento2);color:var(--acento)}#estadoIA.err{background:var(--rojo2);color:var(--rojo)}#estadoIA.pend{background:var(--ambar2);color:var(--ambar)}
+  .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .cats button{border:1px solid var(--linea);background:var(--card2);border-radius:12px;padding:8px 2px;font-size:11px;color:var(--suave);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .cats button span{font-size:20px}
+  .cats button.sel{border-color:var(--acento);background:var(--acento2);color:var(--texto)}
+  .acc{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
   .acc .btn{flex:1}
-  .ayuda{font-size:12px;color:var(--gris);margin-top:4px;line-height:1.4}
-  #toast{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:60;max-width:90vw;text-align:center}
-  #toast.ver{opacity:.92}
-  .spin{display:inline-block;width:14px;height:14px;border:2px solid #9ca3af;border-top-color:transparent;border-radius:50%;animation:g 1s linear infinite;vertical-align:-2px;margin-right:6px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:650;padding:13px 10px;border-radius:14px;border:1px solid var(--linea);background:var(--card2);cursor:pointer;text-align:center}
+  .btn.prim{background:var(--acento);color:var(--acentoT);border-color:var(--acento)}
+  .btn.peq{padding:10px 8px;font-size:14px;font-weight:550}
+  .btn.rojo{color:var(--rojo)}
+  .opcion{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card2);border:1px solid var(--linea);border-radius:16px;padding:14px;margin:8px 0}
+  .opcion span{font-size:26px}
+  .opcion b{display:block;font-size:15px}
+  .opcion small{color:var(--suave);font-size:13px}
+  .ayuda{font-size:12px;color:var(--suave);margin-top:5px;line-height:1.45}
+  .seg{display:flex;background:var(--card2);border:1px solid var(--linea);border-radius:12px;padding:3px}
+  .seg button{flex:1;border:0;background:transparent;padding:9px;border-radius:9px;font-size:14px;color:var(--suave)}
+  .seg button.sel{background:var(--acento);color:var(--acentoT);font-weight:700}
+  hr{border:0;border-top:1px solid var(--linea);margin:18px 0}
+  #toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--texto);color:var(--bg);padding:11px 18px;border-radius:22px;font-size:14px;font-weight:550;opacity:0;transition:opacity .25s;pointer-events:none;z-index:80;max-width:90vw;text-align:center}
+  #toast.ver{opacity:.95}
+  #ocupado{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center}
+  #ocupado.ver{display:flex}
+  #ocupado div{background:var(--card);border-radius:16px;padding:18px 22px;font-weight:600}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid var(--suave);border-top-color:transparent;border-radius:50%;animation:g 1s linear infinite;vertical-align:-2px;margin-right:8px}
   @keyframes g{to{transform:rotate(360deg)}}
-  hr{border:0;border-top:1px solid var(--borde);margin:16px 0}
-  /* Cámara */
-  #camara{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column}
-  #camara.ver{display:flex}
-  #video{flex:1;width:100%;object-fit:cover;min-height:0}
-  .camBar{display:flex;align-items:center;justify-content:space-around;padding:18px 10px 26px;background:#000}
-  .camBtn{background:transparent;border:0;color:#fff;font-size:26px;width:60px;height:60px}
-  #disparador{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25)}
-  #disparador:active{background:#fff}
-  #camMsg{position:absolute;top:20px;left:0;right:0;text-align:center;color:#fff;font-size:14px;text-shadow:0 1px 3px #000}
 </style>
 </head>
 <body>
 <header>
-  <div class="fila"><h1>🧾 Tickets · Nota de gastos</h1><span id="red">📴 Sin conexión</span><button class="icono" id="btnAjustes" aria-label="Ajustes">⚙️</button></div>
-  <div class="fila"><input type="month" id="mes" aria-label="Mes"><div id="totalMes">0,00 €</div></div>
+  <div class="top">
+    <div class="marca">🧾 Tickets <span class="ver" id="verTxt"></span> <span id="red">📴 Sin conexión</span></div>
+    <button class="icono" id="btnAjustes" aria-label="Ajustes">⚙️</button>
+  </div>
+  <div class="mesNav">
+    <button class="flecha" id="mesAnt" aria-label="Mes anterior">‹</button>
+    <button id="mesTitulo"></button>
+    <button class="flecha" id="mesSig" aria-label="Mes siguiente">›</button>
+  </div>
+  <input type="month" id="mesPicker" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px">
 </header>
 
 <main>
+  <div id="resumen"></div>
   <div id="avisos"></div>
   <div id="lista"></div>
 </main>
 
 <div class="barra">
-  <div class="botones">
-    <button class="btn prim" id="btnFoto">📷 Foto</button>
-    <label class="btn">🖼️ Galería<input type="file" accept="image/*" multiple id="inGaleria" hidden></label>
-    <button class="btn" id="btnManual">✍️ A mano</button>
-  </div>
-  <div class="botones2">
-    <button class="btn peq" id="btnExcel">⬇️ Excel del mes</button>
-    <button class="btn peq" id="btnPdf">⬇️ PDF justificantes</button>
-  </div>
-</div>
-<input type="file" accept="image/*" capture="environment" id="inCamara" hidden>
-
-<div id="camara">
-  <video id="video" playsinline muted></video>
-  <div id="camMsg">Encuadra el ticket entero</div>
-  <div class="camBar">
-    <button class="camBtn" id="camCerrar" aria-label="Cerrar">✕</button>
-    <button id="disparador" aria-label="Hacer foto"></button>
-    <button class="camBtn" id="camFlash" aria-label="Linterna">🔦</button>
-  </div>
+  <button class="lateral" id="btnManual"><span>✍️</span>A mano</button>
+  <label class="fab" id="btnAnadir"><span>📷</span>Añadir ticket<input type="file" accept="image/*" multiple id="inFotos" hidden></label>
+  <button class="lateral" id="btnExportar"><span>📤</span>Exportar</button>
 </div>
 
 <div id="toast"></div>
+<div id="ocupado"><div><span class="spin"></span><span id="ocupadoTxt">Un momento…</span></div></div>
 <datalist id="dlComentarios"></datalist>
 
 <!-- Editor de ticket -->
 <dialog id="dlgTicket"><div class="dlg">
+  <div class="tirador"></div>
   <h2 id="tituloTicket">Ticket</h2>
   <img id="fotoPrev" alt="Foto del ticket">
   <div id="estadoIA"></div>
@@ -121,8 +155,9 @@
     <div><label class="campo" for="f_fecha">Fecha</label><input type="date" id="f_fecha"></div>
     <div><label class="campo" for="f_importe">Importe (€)</label><input id="f_importe" inputmode="decimal" placeholder="0,00"></div>
   </div>
-  <label class="campo" for="f_categoria">Columna</label>
-  <select id="f_categoria"></select>
+  <label class="campo">Columna del Excel</label>
+  <div class="cats" id="catsSel"></div>
+  <select id="f_categoria" hidden></select>
   <label class="campo" for="f_comentario">Comentario (sale en el Excel)</label>
   <input id="f_comentario" list="dlComentarios" placeholder="Comida León, Parking FJD…">
   <label class="campo" for="f_establecimiento">Establecimiento</label>
@@ -135,8 +170,8 @@
   </select>
   <div class="ayuda">En automático, la comisión de Telpark (el ticket pequeño de ese día) se suma pero no lleva número propio.</div>
   <div class="acc">
-    <button class="btn prim" id="btnGuardar">Guardar</button>
     <button class="btn" id="btnCancelar">Cancelar</button>
+    <button class="btn prim" id="btnGuardar">Guardar</button>
   </div>
   <div class="acc">
     <button class="btn peq" id="btnReleer">🔁 Leer otra vez con IA</button>
@@ -144,9 +179,28 @@
   </div>
 </div></dialog>
 
+<!-- Exportar -->
+<dialog id="dlgExportar"><div class="dlg">
+  <div class="tirador"></div>
+  <h2 id="tituloExportar">Exportar</h2>
+  <div id="expPaso1">
+    <button class="opcion" id="expExcel"><span>📊</span><div><b>Nota de gastos (Excel)</b><small>Tu plantilla de Euroimmun rellena, lista para imprimir</small></div></button>
+    <button class="opcion" id="expPdf"><span>🧾</span><div><b>Justificantes (PDF)</b><small>Una página por ticket con su número</small></div></button>
+  </div>
+  <div id="expPaso2" hidden>
+    <div class="ayuda" id="expNombre" style="margin-bottom:6px"></div>
+    <button class="opcion" id="expCompartir"><span>📨</span><div><b>Enviar o compartir</b><small>Correo, WhatsApp, Drive…</small></div></button>
+    <button class="opcion" id="expGuardar"><span>💾</span><div><b>Guardar en el móvil</b><small>Se queda en Descargas</small></div></button>
+  </div>
+  <div class="acc"><button class="btn" id="expCerrar">Cerrar</button></div>
+</div></dialog>
+
 <!-- Ajustes -->
 <dialog id="dlgAjustes"><div class="dlg">
+  <div class="tirador"></div>
   <h2>Ajustes</h2>
+  <label class="campo">Apariencia</label>
+  <div class="seg" id="segTema"><button data-v="oscuro">🌙 Oscuro</button><button data-v="claro">☀️ Claro</button><button data-v="sistema">📱 Sistema</button></div>
   <label class="campo" for="a_key">Clave de API de Claude</label>
   <input id="a_key" type="password" autocomplete="off" placeholder="sk-ant-…">
   <div class="ayuda">Se guarda solo en este móvil. Se crea en platform.claude.com → API Keys.</div>
@@ -156,13 +210,12 @@
   <div class="ayuda">claude-haiku-5-5 (más barato) o claude-sonnet-5-5 (más preciso).</div>
   <label class="campo" for="a_oficina">Ciudades de la oficina (para "Comida Oficina")</label>
   <input id="a_oficina">
-  <hr>
   <div class="dos">
     <div><label class="campo" for="a_apellidos">Apellidos</label><input id="a_apellidos"></div>
     <div><label class="campo" for="a_nombre">Nombre</label><input id="a_nombre"></div>
   </div>
   <label class="campo" for="a_depto">Departamento</label><input id="a_depto">
-  <div class="acc"><button class="btn prim" id="btnGuardarAjustes">Guardar</button><button class="btn" id="btnCerrarAjustes">Cerrar</button></div>
+  <div class="acc"><button class="btn" id="btnCerrarAjustes">Cerrar</button><button class="btn prim" id="btnGuardarAjustes">Guardar</button></div>
   <hr>
   <b>Lo que ha aprendido</b>
   <div class="ayuda" id="aprendido">—</div>
@@ -173,11 +226,16 @@
     <button class="btn peq" id="btnBackup">⬇️ Exportar copia</button>
     <label class="btn peq">⬆️ Importar copia<input type="file" accept=".json,application/json" id="inBackup" hidden></label>
   </div>
-  <div class="ayuda" style="text-align:center;margin-top:12px">Versión 2.0</div>
+  <hr>
+  <b>Actualizar la app</b>
+  <div class="ayuda">Si has subido una versión nueva a GitHub y no la ves, pulsa aquí. Tus tickets no se borran.</div>
+  <div class="acc"><button class="btn peq" id="btnActualizar">🔄 Buscar actualización</button></div>
+  <div class="ayuda" style="text-align:center;margin-top:14px" id="verAjustes"></div>
 </div></dialog>
 
 <script>
 "use strict";
+const VERSION = '3.0';
 // ---------- Configuración ----------
 // Mismo orden que las columnas del Excel (D..J). Dentro de un día los tickets se ordenan así.
 const CATS = [
@@ -194,7 +252,7 @@ const CAT_IDX = Object.fromEntries(CATS.map((c,i)=>[c.id,i]));
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const AJUSTES_DEF = {
   key:'', modelo:'claude-haiku-5-5', oficina:'San Sebastián de los Reyes, Alcobendas',
-  apellidos:'LA OSA GOMEZ', nombre:'MARIO', depto:'TÉCNICO'
+  apellidos:'LA OSA GOMEZ', nombre:'MARIO', depto:'TÉCNICO', tema:'oscuro'
 };
 // Plantilla de Euroimmun: fila del día 1 y fila de totales
 const FILA_DIA1 = 14, FILA_TOTAL = 45;
@@ -326,23 +384,60 @@ function buscarAprendido(clave, establecimiento){
   return null;
 }
 
+
+// ---------- Iconos y nombres cortos por columna ----------
+const ICONO = {gasolina:'⛽', parking:'🅿️', otros_transportes:'🚕', comidas:'🍽️', invitaciones:'🎁', reuniones:'🤝', varios:'📦'};
+const CORTO = {gasolina:'Gasolina', parking:'Parking', otros_transportes:'Transporte', comidas:'Comidas', invitaciones:'Invitac.', reuniones:'Reuniones', varios:'Varios'};
+
+// ---------- Errores visibles (que nada se quede "colgado" en silencio) ----------
+function ocupado(txt){ if(txt){ $('ocupadoTxt').textContent=txt; $('ocupado').classList.add('ver'); } else $('ocupado').classList.remove('ver'); }
+window.addEventListener('error', e=>{ ocupado(false); toast('Error: '+(e.message||'desconocido'), 5000); });
+window.addEventListener('unhandledrejection', e=>{ ocupado(false); toast('Error: '+((e.reason&&e.reason.message)||e.reason||'desconocido'), 5000); });
+
+// ---------- Tema ----------
+function aplicarTema(){
+  const t = ajustes.tema || 'oscuro';
+  const real = t==='sistema' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'claro' : 'oscuro') : t;
+  document.documentElement.dataset.tema = real;
+  $('metaTema').content = real==='claro' ? '#f3f5f4' : '#0e1311';
+  document.querySelectorAll('#segTema button').forEach(b=>b.classList.toggle('sel', b.dataset.v===t));
+}
+
+// ---------- Mes ----------
+let MES = hoyISO().slice(0,7);
+function mesActual(){ return MES; }
+function ponerMes(ym){ MES = ym; const [y,m]=ym.split('-').map(Number); $('mesTitulo').textContent = MESES[m-1]+' '+y; pintar(); }
+function moverMes(d){ let [y,m]=MES.split('-').map(Number); m+=d; if(m<1){m=12;y--;} if(m>12){m=1;y++;} ponerMes(y+'-'+String(m).padStart(2,'0')); }
+$('mesAnt').onclick = ()=>moverMes(-1);
+$('mesSig').onclick = ()=>moverMes(1);
+$('mesTitulo').onclick = ()=>{ const p=$('mesPicker'); p.value=MES; try{ p.showPicker(); }catch(e){ p.click(); } };
+$('mesPicker').onchange = e=>{ if(e.target.value) ponerMes(e.target.value); };
+
 // ---------- Pintar ----------
-function mesActual(){ return $('mes').value; }
+const miniaturas = new Map();
+function urlMini(t){ if(!t.foto) return null; if(!miniaturas.has(t.id)) miniaturas.set(t.id, URL.createObjectURL(t.foto)); return miniaturas.get(t.id); }
 function crearFilaTicket(t, opciones={}){
   const el = document.createElement('div'); el.className='ticket'+(t.estado==='revisar'?' revisar':'');
-  const num = document.createElement('div');
-  if(t.estado==='pendiente'){ num.className='num pend'; num.textContent='⏳'; }
-  else { num.className='num'+(t._num?'':' suma'); num.textContent = t._num ?? '+'; }
+  const mini = document.createElement('div'); mini.className='mini';
+  const u = urlMini(t);
+  if(u){ mini.style.backgroundImage = `url("${u}")`; const c=document.createElement('span'); c.className='cat'; c.textContent = t.estado==='pendiente'?'⏳':(ICONO[t.categoria]||'📦'); mini.appendChild(c); }
+  else mini.textContent = ICONO[t.categoria]||'📦';
   const info = document.createElement('div'); info.className='info';
   const b = document.createElement('b');
   if(t.estado==='revisar'){ const e=document.createElement('span'); e.className='etq'; e.textContent='REVISAR'; b.appendChild(e); }
   b.appendChild(document.createTextNode(t.estado==='pendiente' ? 'Foto pendiente de leer' : (t.comentario || '(sin comentario)')));
   const s = document.createElement('small');
   s.textContent = t.estado==='pendiente' ? 'Se leerá sola cuando haya conexión'
-    : (opciones.conFecha? fechaCorta(t.fecha)+' · ' : '') + (CAT_POR_ID[t.categoria]?.nombre||'Varios') + (t.establecimiento? ' · '+t.establecimiento : '') + (t.foto? ' · 📷':'');
+    : (opciones.conFecha? fechaCorta(t.fecha)+' · ' : '') + (CORTO[t.categoria]||'Varios') + (t.establecimiento? ' · '+t.establecimiento : '');
   info.append(b,s);
+  const der = document.createElement('div'); der.className='der';
   const imp = document.createElement('div'); imp.className='imp'; imp.textContent = t.estado==='pendiente' ? '' : euros(t.importe);
-  el.append(num, info, imp);
+  const num = document.createElement('span');
+  if(t.estado==='pendiente'){ num.className='num pend'; num.textContent='pendiente'; }
+  else if(t._num){ num.className='num'; num.textContent='nº '+t._num; }
+  else if(t._num===null){ num.className='num suma'; num.textContent='+ suma'; }
+  der.append(imp); if(num.textContent) der.append(num);
+  el.append(mini, info, der);
   if(opciones.flechas){
     const fl = document.createElement('div'); fl.className='flechas';
     const up = document.createElement('button'); up.textContent='▲'; up.setAttribute('aria-label','Subir');
@@ -354,17 +449,32 @@ function crearFilaTicket(t, opciones={}){
   el.onclick = ()=>abrirEditor(t);
   return el;
 }
+function pintarResumen(ord){
+  const r = $('resumen'); r.innerHTML='';
+  const total = ord.reduce((a,t)=>a+(t.importe||0),0);
+  const nJ = ord.filter(t=>t._num).length;
+  const d = document.createElement('div'); d.className='resumen';
+  d.innerHTML = `<div class="lbl">Total del mes</div><div class="total">${euros(total)}</div><div class="sub">${ord.length} ${ord.length===1?'ticket':'tickets'} · ${nJ} ${nJ===1?'justificante':'justificantes'}</div>`;
+  const chips = document.createElement('div'); chips.className='chips';
+  CATS.forEach(c=>{
+    const v = ord.filter(t=>t.categoria===c.id).reduce((a,t)=>a+(t.importe||0),0);
+    if(v){ const ch=document.createElement('span'); ch.className='chip'; ch.textContent = `${ICONO[c.id]} ${CORTO[c.id]} ${euros(v)}`; chips.appendChild(ch); }
+  });
+  if(chips.children.length) d.appendChild(chips);
+  r.appendChild(d);
+}
 function pintar(){
   const ym = mesActual();
   const ord = numerar(ticketsDelMes(ym));
   const cont = $('lista'); cont.innerHTML='';
-  $('totalMes').textContent = euros(ord.reduce((a,t)=>a+(t.importe||0),0));
-  // sugerencias de comentarios
+  const ids = new Set(TICKETS.map(t=>t.id));
+  for(const [id,u] of miniaturas){ if(!ids.has(id)){ URL.revokeObjectURL(u); miniaturas.delete(id); } }
   const dl = $('dlComentarios'); dl.innerHTML='';
   [...new Set(TICKETS.map(t=>(t.comentario||'').trim()).filter(Boolean))].slice(-80).forEach(c=>{ const o=document.createElement('option'); o.value=c; dl.appendChild(o); });
+  pintarResumen(ord);
   pintarAvisos();
   if(!ord.length){
-    cont.innerHTML = '<div class="vacio">No hay tickets este mes.<br>Pulsa <b>📷 Foto</b> para añadir el primero.</div>';
+    cont.innerHTML = '<div class="vacio"><div class="gr">🧾</div>No hay tickets en este mes.<br>Pulsa <b>📷 Añadir ticket</b> para hacer una foto o elegirla de la galería.</div>';
     return;
   }
   let diaAct = null, cabecera=null, totalDia=0;
@@ -389,7 +499,9 @@ function pintarAvisos(){
   const rev = ordenar(TICKETS.filter(t=>t.estado==='revisar'));
   if(rev.length){
     const d = document.createElement('div'); d.className='aviso';
-    d.innerHTML = `<h3>✅ ${rev.length===1?'1 ticket leído':rev.length+' tickets leídos'} sin conexión</h3><p>${rev.length===1?'La IA lo leyó al volver la cobertura. Tócalo para revisarlo y guardarlo.':'La IA los leyó al volver la cobertura. Tócalos para revisarlos y guardarlos.'}</p>`;
+    d.innerHTML = rev.length===1
+      ? '<h3>✅ 1 ticket leído al volver la conexión</h3><p>Tócalo para revisarlo y guardarlo.</p>'
+      : `<h3>✅ ${rev.length} tickets leídos al volver la conexión</h3><p>Tócalos para revisarlos y guardarlos.</p>`;
     rev.forEach(t=>d.appendChild(crearFilaTicket(t,{conFecha:true})));
     av.appendChild(d);
   }
@@ -400,6 +512,7 @@ function pintarAvisos(){
     av.appendChild(d);
   }
 }
+// Solo se puede reordenar dentro de la misma columna (el orden entre columnas es fijo, como el Excel)
 async function mover(t, dir){
   const grupo = ordenar(listos(TICKETS).filter(x=>x.fecha===t.fecha && x.categoria===t.categoria));
   const i = grupo.findIndex(x=>x.id===t.id), j = i+dir;
@@ -422,49 +535,6 @@ async function prepararFoto(file){
   const blob = await new Promise(r=>c.toBlob(r,'image/jpeg',0.82));
   return {blob, w:c.width, h:c.height};
 }
-
-// ---------- Cámara propia (se abre directamente, sin preguntar) ----------
-let stream = null, linterna = false;
-async function abrirCamara(){
-  if(!navigator.mediaDevices?.getUserMedia){ $('inCamara').click(); return; }
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:{ideal:'environment'}, width:{ideal:3840}, height:{ideal:2160}}});
-  }catch(e){ toast('No se pudo abrir la cámara ('+e.name+')'); $('inCamara').click(); return; }
-  const v = $('video'); v.srcObject = stream;
-  $('camara').classList.add('ver');
-  try{ await v.play(); }catch(e){}
-  const track = stream.getVideoTracks()[0];
-  const caps = track.getCapabilities ? track.getCapabilities() : {};
-  linterna = false;
-  $('camFlash').style.visibility = caps.torch ? 'visible' : 'hidden';
-  $('camMsg').textContent = 'Encuadra el ticket entero';
-}
-function cerrarCamara(){
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
-  $('video').srcObject = null;
-  $('camara').classList.remove('ver');
-}
-$('camCerrar').onclick = cerrarCamara;
-$('camFlash').onclick = async ()=>{
-  const track = stream?.getVideoTracks()[0]; if(!track) return;
-  linterna = !linterna;
-  try{ await track.applyConstraints({advanced:[{torch:linterna}]}); }catch(e){ toast('Linterna no disponible'); }
-};
-$('disparador').onclick = async ()=>{
-  if(!stream) return;
-  $('camMsg').textContent = 'Guardando foto…';
-  const track = stream.getVideoTracks()[0];
-  let blob = null;
-  if('ImageCapture' in window){ try{ blob = await new ImageCapture(track).takePhoto(); }catch(e){} }
-  if(!blob){
-    const v = $('video'), c = document.createElement('canvas');
-    c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v,0,0);
-    blob = await new Promise(r=>c.toBlob(r,'image/jpeg',0.92));
-  }
-  cerrarCamara();
-  cola = [];
-  nuevoDesdeFoto(blob).catch(()=>toast('No se pudo procesar la foto'));
-};
 
 // ---------- IA (Claude, llamada directa desde el móvil) ----------
 function promptIA(){
@@ -542,15 +612,23 @@ function aplicarLectura(t, r){
   return out;
 }
 
+
 // ---------- Editor ----------
 let editando = null, esNuevo = false, tocados = new Set(), cola = [], leyendo = 0, sinRed = false;
 const CAMPOS = ['f_fecha','f_importe','f_categoria','f_comentario','f_establecimiento','f_numerar'];
 const CAMPO_A = {fecha:'f_fecha', importe:'f_importe', categoria:'f_categoria', comentario:'f_comentario', establecimiento:'f_establecimiento', numerar:'f_numerar'};
-CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.nombre; $('f_categoria').appendChild(o); });
+CATS.forEach(c=>{
+  const o=document.createElement('option'); o.value=c.id; o.textContent=c.nombre; $('f_categoria').appendChild(o);
+  const b=document.createElement('button'); b.type='button'; b.dataset.v=c.id; b.innerHTML=`<span>${ICONO[c.id]}</span>${CORTO[c.id]}`;
+  b.onclick=()=>{ $('f_categoria').value=c.id; tocados.add('f_categoria'); marcarCat(); };
+  $('catsSel').appendChild(b);
+});
+function marcarCat(){ const v=$('f_categoria').value; document.querySelectorAll('#catsSel button').forEach(b=>b.classList.toggle('sel', b.dataset.v===v)); }
 CAMPOS.forEach(id=>$(id).addEventListener('input', ()=>tocados.add(id)));
 
 function estadoIA(html, clase=''){ const e=$('estadoIA'); e.style.display = html?'block':'none'; e.className=clase; e.innerHTML=html||''; }
 const fmtImp = n => (n!=null && !isNaN(n)) ? Number(n).toFixed(2).replace('.',',') : '';
+function ponCampo(id, v){ $(id).value = v; if(id==='f_categoria') marcarCat(); }
 
 function abrirEditor(t, nuevo=false){
   editando = t; esNuevo = nuevo; tocados = new Set(); sinRed = false;
@@ -558,7 +636,7 @@ function abrirEditor(t, nuevo=false){
                                 : t.estado==='revisar' ? 'Revisar ticket' : t.estado==='pendiente' ? 'Foto pendiente' : 'Editar ticket';
   $('f_fecha').value = t.fecha || '';
   $('f_importe').value = fmtImp(t.importe);
-  $('f_categoria').value = t.categoria || 'comidas';
+  ponCampo('f_categoria', t.categoria || 'comidas');
   $('f_comentario').value = t.comentario || '';
   $('f_establecimiento').value = t.establecimiento || '';
   $('f_numerar').value = t.numerar || 'auto';
@@ -581,7 +659,7 @@ async function analizar(t){
     const r = await leerTicketIA(t.foto);
     if(miLectura!==leyendo || editando!==t) return;
     const datos = aplicarLectura(t, r);
-    for(const k in datos){ const id=CAMPO_A[k]; if(!tocados.has(id)) $(id).value = k==='importe' ? fmtImp(datos[k]) : datos[k]; }
+    for(const k in datos){ const id=CAMPO_A[k]; if(!tocados.has(id)) ponCampo(id, k==='importe' ? fmtImp(datos[k]) : datos[k]); }
     estadoIA(r._aprendido ? '📚 Leído. Sitio conocido: he puesto el mismo comentario que la última vez. Revisa y guarda.' : '✅ Leído. Revisa los datos y pulsa Guardar.', 'ok');
   }catch(e){
     if(miLectura!==leyendo || editando!==t) return;
@@ -602,7 +680,7 @@ async function siguienteDeCola(){
 }
 function cerrarEditor(){
   leyendo++;
-  $('dlgTicket').close();
+  if($('dlgTicket').open) $('dlgTicket').close();
   editando = null;
   setTimeout(siguienteDeCola, 150);
 }
@@ -626,13 +704,13 @@ $('btnGuardar').onclick = async ()=>{
                     establecimiento:$('f_establecimiento').value.trim(), numerar:$('f_numerar').value, editado:Date.now()});
   delete t.estado;
   await DB.guardar(t);
-  if(fecha.slice(0,7)!==mesActual()) $('mes').value = fecha.slice(0,7);
   toast('Guardado');
-  await recargar();
+  if(fecha.slice(0,7)!==mesActual()) MES = fecha.slice(0,7);
+  await recargar(); ponerMes(MES);
   cerrarEditor();
 };
-$('btnCancelar').onclick = ()=>cerrarEditor();
-$('dlgTicket').addEventListener('cancel', e=>{ e.preventDefault(); cerrarEditor(); });
+$('btnCancelar').onclick = ()=>{ cola=[]; cerrarEditor(); };
+$('dlgTicket').addEventListener('cancel', e=>{ e.preventDefault(); cola=[]; cerrarEditor(); });
 $('btnBorrar').onclick = async ()=>{
   if(!editando) return;
   if(!confirm('¿Borrar este ticket?')) return;
@@ -640,16 +718,14 @@ $('btnBorrar').onclick = async ()=>{
 };
 $('btnReleer').onclick = ()=>{ if(editando?.foto){ tocados = new Set(); analizar(editando); } };
 
-$('btnFoto').onclick = ()=>abrirCamara();
-$('inCamara').onchange = e=>{ const f=e.target.files[0]; e.target.value=''; if(f){ cola=[]; nuevoDesdeFoto(f).catch(()=>toast('No se pudo abrir la foto')); } };
-$('inGaleria').onchange = e=>{ const fs=[...e.target.files]; e.target.value=''; if(fs.length){ cola = fs; siguienteDeCola(); } };
+// Un solo botón: Android ofrece Cámara o Fotos en el mismo menú
+$('inFotos').onchange = e=>{ const fs=[...e.target.files]; e.target.value=''; if(fs.length){ cola = fs; siguienteDeCola(); } };
 $('btnManual').onclick = ()=>{
   const ym = mesActual();
   const fecha = hoyISO().slice(0,7)===ym ? hoyISO() : ym+'-01';
   cola=[];
   abrirEditor({id:nuevoId(), fecha, importe:NaN, categoria:'comidas', comentario:'', establecimiento:'', ciudad:'', clave:'', numerar:'auto', foto:null, orden:Date.now(), creado:Date.now()}, true);
 };
-$('mes').onchange = pintar;
 
 // ---------- Lectura automática de pendientes al volver la conexión ----------
 let procesando = false;
@@ -686,29 +762,36 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) procesa
 setInterval(procesarPendientes, 90000);
 
 // ---------- Ajustes ----------
+let temaElegido = ajustes.tema || 'oscuro';
 function pintarAprendido(){
   const mem = [...memoria().values()];
   $('aprendido').innerHTML = '';
   if(!mem.length){ $('aprendido').textContent = 'Todavía nada. Cada ticket que guardes le enseña el comentario de ese sitio.'; return; }
   mem.slice(-30).reverse().forEach(m=>{ const d=document.createElement('div'); d.textContent = `${m.clave} → ${m.comentario}`; $('aprendido').appendChild(d); });
 }
+document.querySelectorAll('#segTema button').forEach(b=>b.onclick=()=>{ temaElegido=b.dataset.v; ajustes.tema=temaElegido; guardarAjustesLS(ajustes); aplicarTema(); });
+matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', aplicarTema);
 $('btnAjustes').onclick = ()=>{
   $('a_key').value=ajustes.key; $('a_modelo').value=ajustes.modelo; $('a_oficina').value=ajustes.oficina;
   $('a_apellidos').value=ajustes.apellidos; $('a_nombre').value=ajustes.nombre; $('a_depto').value=ajustes.depto;
-  pintarAprendido();
+  pintarAprendido(); aplicarTema();
   $('dlgAjustes').showModal();
 };
 $('btnCerrarAjustes').onclick = ()=>$('dlgAjustes').close();
 $('btnGuardarAjustes').onclick = ()=>{
   ajustes = {key:$('a_key').value.trim(), modelo:$('a_modelo').value.trim()||AJUSTES_DEF.modelo, oficina:$('a_oficina').value.trim(),
-             apellidos:$('a_apellidos').value.trim(), nombre:$('a_nombre').value.trim(), depto:$('a_depto').value.trim()};
+             apellidos:$('a_apellidos').value.trim(), nombre:$('a_nombre').value.trim(), depto:$('a_depto').value.trim(), tema:temaElegido};
   guardarAjustesLS(ajustes); $('dlgAjustes').close(); toast('Ajustes guardados'); procesarPendientes();
 };
 $('btnBackup').onclick = async ()=>{
-  const out = [];
-  for(const t of TICKETS){ const c={...t}; delete c._num; if(c.foto) c.foto = await blobADataURL(c.foto); out.push(c); }
-  descargar(new Blob([JSON.stringify({app:'tickets-gastos', version:2, fecha:new Date().toISOString(), tickets:out})],{type:'application/json'}),
-            'copia-tickets-'+hoyISO()+'.json');
+  ocupado('Preparando copia…');
+  try{
+    const out = [];
+    for(const t of TICKETS){ const c={...t}; delete c._num; if(c.foto) c.foto = await blobADataURL(c.foto); out.push(c); }
+    const blob = new Blob([JSON.stringify({app:'tickets-gastos', version:3, fecha:new Date().toISOString(), tickets:out})],{type:'application/json'});
+    ocupado(false); $('dlgAjustes').close();
+    ofrecerArchivo(blob, 'copia-tickets-'+hoyISO()+'.json', 'Copia de seguridad');
+  }finally{ ocupado(false); }
 };
 $('inBackup').onchange = async e=>{
   const f = e.target.files[0]; e.target.value=''; if(!f) return;
@@ -718,6 +801,15 @@ $('inBackup').onchange = async e=>{
     for(const t of (j.tickets||[])){ if(t.foto && typeof t.foto==='string') t.foto = await (await fetch(t.foto)).blob(); await DB.guardar(t); n++; }
     await recargar(); toast(n+' tickets importados');
   }catch(err){ toast('Copia no válida'); }
+};
+// Borra la caché de la app (no los tickets) y recarga la última versión de GitHub
+$('btnActualizar').onclick = async ()=>{
+  ocupado('Buscando actualización…');
+  try{
+    if('serviceWorker' in navigator){ for(const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); }
+    if(window.caches){ for(const k of await caches.keys()) await caches.delete(k); }
+  }catch(e){}
+  location.replace(location.pathname + '?v=' + Date.now());
 };
 
 // ---------- ZIP ----------
@@ -822,15 +914,6 @@ function avisoRevisar(ym){
   const n = TICKETS.filter(t=>t.estado==='pendiente').length + TICKETS.filter(t=>t.estado==='revisar' && t.fecha.slice(0,7)===ym).length;
   return n ? ` (ojo: ${n} ${n===1?'ticket':'tickets'} sin revisar)` : '';
 }
-$('btnExcel').onclick = async ()=>{
-  const ym = mesActual(); const [y,m] = ym.split('-').map(Number);
-  if(!ticketsDelMes(ym).length){ toast('No hay tickets este mes'); return; }
-  try{
-    descargar(await generarExcel(ym), `Nota de Gastos Euroimmun ${MESES[m-1]} ${y}.xlsx`);
-    toast('Excel generado'+avisoRevisar(ym), 3500);
-  }catch(e){ toast('Error: '+e.message, 5000); }
-};
-
 // ---------- PDF de justificantes ----------
 function pdfTexto(s){
   let o='';
@@ -869,35 +952,85 @@ async function generarPdf(items){
   put(`trailer\n<< /Size ${total+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
   return new Blob(trozos, {type:'application/pdf'});
 }
-$('btnPdf').onclick = async ()=>{
+
+
+// ---------- Exportar: generar y luego compartir o guardar ----------
+let archivoListo = null;
+function abrirExportar(){
+  $('tituloExportar').textContent = 'Exportar ' + $('mesTitulo').textContent;
+  $('expPaso1').hidden = false; $('expPaso2').hidden = true; archivoListo = null;
+  if(!$('dlgExportar').open) $('dlgExportar').showModal();
+}
+function ofrecerArchivo(blob, nombre, titulo){
+  archivoListo = {blob, nombre};
+  $('tituloExportar').textContent = titulo || 'Archivo listo';
+  $('expNombre').textContent = '✅ ' + nombre;
+  const f = new File([blob], nombre, {type: blob.type});
+  const puedeCompartir = !!(navigator.canShare && navigator.canShare({files:[f]}));
+  $('expCompartir').hidden = !puedeCompartir;
+  $('expPaso1').hidden = true; $('expPaso2').hidden = false;
+  if(!$('dlgExportar').open) $('dlgExportar').showModal();
+}
+$('btnExportar').onclick = abrirExportar;
+$('expCerrar').onclick = ()=>$('dlgExportar').close();
+$('expExcel').onclick = async ()=>{
+  const ym = mesActual(); const [y,m] = ym.split('-').map(Number);
+  if(!ticketsDelMes(ym).length){ toast('No hay tickets este mes'); return; }
+  ocupado('Generando Excel…');
+  try{
+    const blob = await generarExcel(ym);
+    ocupado(false);
+    ofrecerArchivo(blob, `Nota de Gastos Euroimmun ${MESES[m-1]} ${y}.xlsx`, 'Nota de gastos lista');
+    const av = avisoRevisar(ym); if(av) toast('Ojo'+av, 4000);
+  }catch(e){ ocupado(false); toast('Error al generar el Excel: '+e.message, 6000); }
+};
+$('expPdf').onclick = async ()=>{
   const ym = mesActual(); const [y,m] = ym.split('-').map(Number);
   const ord = numerar(ticketsDelMes(ym)).filter(t=>t.foto);
   if(!ord.length){ toast('No hay fotos de tickets este mes'); return; }
-  toast('Generando PDF…');
-  const items = [];
-  let ultimoNum = null;
-  for(const t of ord){
-    if(t._num) ultimoNum = t._num;
-    let w=t.fotoW, h=t.fotoH;
-    if(!w||!h){ const b=await createImageBitmap(t.foto); w=b.width; h=b.height; }
-    items.push({
-      titulo: t._num ? `Justificante nº ${t._num}` : `Justificante nº ${ultimoNum ?? '-'} (comisión, se suma)`,
-      sub: `${fechaCorta(t.fecha)}  ·  ${euros(t.importe)}  ·  ${t.comentario||''}`,
-      jpeg: new Uint8Array(await t.foto.arrayBuffer()), w, h
-    });
-  }
-  descargar(await generarPdf(items), `Justificantes ${MESES[m-1]} ${y}.pdf`);
+  ocupado('Generando PDF…');
+  try{
+    const items = [];
+    let ultimoNum = null;
+    for(const t of ord){
+      if(t._num) ultimoNum = t._num;
+      // Se vuelve a pasar cada foto por JPEG estándar: así el PDF nunca falla por formatos raros
+      const {blob, w, h} = await prepararFoto(t.foto);
+      items.push({
+        titulo: t._num ? `Justificante nº ${t._num}` : `Justificante nº ${ultimoNum ?? '-'} (comisión, se suma)`,
+        sub: `${fechaCorta(t.fecha)}  ·  ${euros(t.importe)}  ·  ${t.comentario||''}`,
+        jpeg: new Uint8Array(await blob.arrayBuffer()), w, h
+      });
+    }
+    const pdf = await generarPdf(items);
+    ocupado(false);
+    ofrecerArchivo(pdf, `Justificantes ${MESES[m-1]} ${y}.pdf`, 'Justificantes listos');
+  }catch(e){ ocupado(false); toast('Error al generar el PDF: '+e.message, 6000); }
+};
+$('expCompartir').onclick = async ()=>{
+  if(!archivoListo) return;
+  const f = new File([archivoListo.blob], archivoListo.nombre, {type: archivoListo.blob.type});
+  try{ await navigator.share({files:[f], title:archivoListo.nombre}); }
+  catch(e){ if(e.name!=='AbortError') toast('No se pudo compartir: '+e.message, 5000); }
+};
+$('expGuardar').onclick = ()=>{
+  if(!archivoListo) return;
+  // octet-stream: Android lo guarda en Descargas en vez de intentar abrirlo dentro de la app
+  descargar(new Blob([archivoListo.blob], {type:'application/octet-stream'}), archivoListo.nombre);
+  toast('Guardado en Descargas', 3000);
 };
 
 // ---------- Arranque ----------
 (async ()=>{
-  $('mes').value = hoyISO().slice(0,7);
+  $('verTxt').textContent = 'v'+VERSION; $('verAjustes').textContent = 'Versión '+VERSION;
+  aplicarTema();
+  ponerMes(MES);
   estadoRed();
   try{ await DB.abrir(); }catch(e){ $('lista').innerHTML='<div class="vacio">Este navegador no permite guardar datos.</div>'; return; }
   try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
   await recargar();
   if(!ajustes.key) toast('Configura tu clave de API en ⚙️ para leer tickets con IA', 4000);
-  if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{});
   procesarPendientes();
 })();
 </script>
