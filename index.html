@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Tickets Gastos</title>
 <style>
-  :root{--verde:#2f6b1f;--verde2:#e6f0df;--gris:#6b7280;--borde:#e5e7eb;--rojo:#b91c1c;--fondo:#f6f7f5}
+  :root{--verde:#2f6b1f;--verde2:#e6f0df;--gris:#6b7280;--borde:#e5e7eb;--rojo:#b91c1c;--fondo:#f6f7f5;--ambar:#fef3c7;--ambar2:#92400e}
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--fondo);color:#111;padding-bottom:150px}
   header{position:sticky;top:0;z-index:5;background:var(--verde);color:#fff;padding:10px 14px 12px}
@@ -19,14 +19,22 @@
   header input[type=month]{font-size:16px;padding:6px 8px;border-radius:8px;border:0}
   #totalMes{font-size:18px;font-weight:700}
   .icono{background:transparent;border:0;color:#fff;font-size:22px;padding:4px 6px}
+  #red{font-size:12px;background:rgba(255,255,255,.18);padding:3px 8px;border-radius:10px;display:none}
   main{padding:8px 10px}
+  .aviso{background:#fff;border:1px solid var(--borde);border-left:5px solid var(--verde);border-radius:12px;padding:10px 12px;margin:8px 0}
+  .aviso.pend{border-left-color:#d97706}
+  .aviso h3{margin:0 0 4px;font-size:15px}
+  .aviso p{margin:0;font-size:13px;color:var(--gris)}
   .dia{margin:12px 0 4px;display:flex;justify-content:space-between;color:var(--gris);font-size:13px;font-weight:600;text-transform:capitalize;padding:0 4px}
   .ticket{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--borde);border-radius:12px;padding:10px;margin:6px 0}
+  .ticket.revisar{border:2px solid #f59e0b;background:#fffbeb}
   .num{min-width:34px;height:34px;border-radius:50%;background:var(--verde2);color:var(--verde);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
-  .num.suma{background:#fef3c7;color:#92400e}
+  .num.suma{background:var(--ambar);color:var(--ambar2)}
+  .num.pend{background:#e5e7eb;color:#374151}
   .info{flex:1;min-width:0}
   .info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .info small{color:var(--gris);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .etq{display:inline-block;font-size:11px;font-weight:700;background:#f59e0b;color:#fff;border-radius:6px;padding:1px 6px;margin-right:4px;vertical-align:1px}
   .imp{font-weight:700;white-space:nowrap}
   .flechas{display:flex;flex-direction:column}
   .flechas button{border:0;background:transparent;font-size:15px;padding:2px 6px;color:var(--gris)}
@@ -34,7 +42,7 @@
   .barra{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--borde);padding:10px;display:grid;gap:8px;z-index:5}
   .botones{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
   .botones2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:600;padding:12px 8px;border-radius:12px;border:1px solid var(--borde);background:#fff;color:#111;cursor:pointer;text-align:center}
+  .btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:600;padding:12px 8px;border-radius:12px;border:1px solid var(--borde);background:#fff;color:#111;cursor:pointer;text-align:center;font-family:inherit}
   .btn.prim{background:var(--verde);color:#fff;border-color:var(--verde)}
   .btn.peq{padding:9px 8px;font-size:14px;font-weight:500}
   .btn.rojo{color:var(--rojo);border-color:#fecaca}
@@ -43,38 +51,61 @@
   .dlg{padding:16px;overflow:auto;max-height:92vh}
   .dlg h2{margin:0 0 10px;font-size:18px}
   label.campo{display:block;font-size:13px;color:var(--gris);margin:10px 0 3px}
-  .dlg input,.dlg select{width:100%;font-size:16px;padding:10px;border:1px solid #d1d5db;border-radius:10px;background:#fff}
+  .dlg input,.dlg select{width:100%;font-size:16px;padding:10px;border:1px solid #d1d5db;border-radius:10px;background:#fff;font-family:inherit}
   .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   #fotoPrev{width:100%;max-height:220px;object-fit:contain;background:#111;border-radius:10px;display:none}
   #estadoIA{font-size:14px;margin-top:8px;padding:8px 10px;border-radius:8px;background:#f3f4f6;display:none}
-  #estadoIA.ok{background:var(--verde2)}#estadoIA.err{background:#fee2e2;color:var(--rojo)}
+  #estadoIA.ok{background:var(--verde2)}#estadoIA.err{background:#fee2e2;color:var(--rojo)}#estadoIA.pend{background:var(--ambar);color:var(--ambar2)}
   .acc{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
   .acc .btn{flex:1}
   .ayuda{font-size:12px;color:var(--gris);margin-top:4px;line-height:1.4}
-  #toast{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50;max-width:90vw;text-align:center}
+  #toast{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:60;max-width:90vw;text-align:center}
   #toast.ver{opacity:.92}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid #9ca3af;border-top-color:transparent;border-radius:50%;animation:g 1s linear infinite;vertical-align:-2px;margin-right:6px}
   @keyframes g{to{transform:rotate(360deg)}}
   hr{border:0;border-top:1px solid var(--borde);margin:16px 0}
+  /* Cámara */
+  #camara{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column}
+  #camara.ver{display:flex}
+  #video{flex:1;width:100%;object-fit:cover;min-height:0}
+  .camBar{display:flex;align-items:center;justify-content:space-around;padding:18px 10px 26px;background:#000}
+  .camBtn{background:transparent;border:0;color:#fff;font-size:26px;width:60px;height:60px}
+  #disparador{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25)}
+  #disparador:active{background:#fff}
+  #camMsg{position:absolute;top:20px;left:0;right:0;text-align:center;color:#fff;font-size:14px;text-shadow:0 1px 3px #000}
 </style>
 </head>
 <body>
 <header>
-  <div class="fila"><h1>🧾 Tickets · Nota de gastos</h1><button class="icono" id="btnAjustes" aria-label="Ajustes">⚙️</button></div>
+  <div class="fila"><h1>🧾 Tickets · Nota de gastos</h1><span id="red">📴 Sin conexión</span><button class="icono" id="btnAjustes" aria-label="Ajustes">⚙️</button></div>
   <div class="fila"><input type="month" id="mes" aria-label="Mes"><div id="totalMes">0,00 €</div></div>
 </header>
 
-<main id="lista"></main>
+<main>
+  <div id="avisos"></div>
+  <div id="lista"></div>
+</main>
 
 <div class="barra">
   <div class="botones">
-    <label class="btn prim">📷 Foto<input type="file" accept="image/*" capture="environment" id="inCamara" hidden></label>
+    <button class="btn prim" id="btnFoto">📷 Foto</button>
     <label class="btn">🖼️ Galería<input type="file" accept="image/*" multiple id="inGaleria" hidden></label>
     <button class="btn" id="btnManual">✍️ A mano</button>
   </div>
   <div class="botones2">
     <button class="btn peq" id="btnExcel">⬇️ Excel del mes</button>
     <button class="btn peq" id="btnPdf">⬇️ PDF justificantes</button>
+  </div>
+</div>
+<input type="file" accept="image/*" capture="environment" id="inCamara" hidden>
+
+<div id="camara">
+  <video id="video" playsinline muted></video>
+  <div id="camMsg">Encuadra el ticket entero</div>
+  <div class="camBar">
+    <button class="camBtn" id="camCerrar" aria-label="Cerrar">✕</button>
+    <button id="disparador" aria-label="Hacer foto"></button>
+    <button class="camBtn" id="camFlash" aria-label="Linterna">🔦</button>
   </div>
 </div>
 
@@ -118,7 +149,7 @@
   <h2>Ajustes</h2>
   <label class="campo" for="a_key">Clave de API de Claude</label>
   <input id="a_key" type="password" autocomplete="off" placeholder="sk-ant-…">
-  <div class="ayuda">Se guarda solo en este móvil. Se crea en console.anthropic.com → API Keys.</div>
+  <div class="ayuda">Se guarda solo en este móvil. Se crea en platform.claude.com → API Keys.</div>
   <label class="campo" for="a_modelo">Modelo</label>
   <input id="a_modelo" autocomplete="off" list="dlModelos">
   <datalist id="dlModelos"><option value="claude-haiku-5-5"><option value="claude-sonnet-5-5"></datalist>
@@ -133,32 +164,40 @@
   <label class="campo" for="a_depto">Departamento</label><input id="a_depto">
   <div class="acc"><button class="btn prim" id="btnGuardarAjustes">Guardar</button><button class="btn" id="btnCerrarAjustes">Cerrar</button></div>
   <hr>
+  <b>Lo que ha aprendido</b>
+  <div class="ayuda" id="aprendido">—</div>
+  <hr>
   <b>Copia de seguridad</b>
   <div class="ayuda">Los tickets viven solo en este móvil. Haz una copia de vez en cuando (incluye las fotos).</div>
   <div class="acc">
     <button class="btn peq" id="btnBackup">⬇️ Exportar copia</button>
     <label class="btn peq">⬆️ Importar copia<input type="file" accept=".json,application/json" id="inBackup" hidden></label>
   </div>
+  <div class="ayuda" style="text-align:center;margin-top:12px">Versión 2.0</div>
 </div></dialog>
 
 <script>
 "use strict";
 // ---------- Configuración ----------
+// Mismo orden que las columnas del Excel (D..J). Dentro de un día los tickets se ordenan así.
 const CATS = [
-  {id:'gasolina',          nombre:'Gasolina (NO SolRed)', col:'GASOLINA\nNO SolRed'},
-  {id:'parking',           nombre:'Parking',              col:'PARKING'},
-  {id:'otros_transportes', nombre:'Otros transportes',    col:'OTROS\nTRANSPORTES'},
-  {id:'comidas',           nombre:'Hotel / Comidas',      col:'HOTEL\nCOMIDAS'},
-  {id:'invitaciones',      nombre:'Invitaciones',         col:'INVITACIONES'},
-  {id:'reuniones',         nombre:'Reuniones promo',      col:'REUNIONES\nPROMO'},
-  {id:'varios',            nombre:'Varios',               col:'VARIOS\n(Especificar)'},
+  {id:'gasolina',          nombre:'Gasolina (NO SolRed)', col:'D'},
+  {id:'parking',           nombre:'Parking',              col:'E'},
+  {id:'otros_transportes', nombre:'Otros transportes',    col:'F'},
+  {id:'comidas',           nombre:'Hotel / Comidas',      col:'G'},
+  {id:'invitaciones',      nombre:'Invitaciones',         col:'H'},
+  {id:'reuniones',         nombre:'Reuniones promo',      col:'I'},
+  {id:'varios',            nombre:'Varios',               col:'J'},
 ];
 const CAT_POR_ID = Object.fromEntries(CATS.map(c=>[c.id,c]));
+const CAT_IDX = Object.fromEntries(CATS.map((c,i)=>[c.id,i]));
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const AJUSTES_DEF = {
   key:'', modelo:'claude-haiku-5-5', oficina:'San Sebastián de los Reyes, Alcobendas',
   apellidos:'LA OSA GOMEZ', nombre:'MARIO', depto:'TÉCNICO'
 };
+// Plantilla de Euroimmun: fila del día 1 y fila de totales
+const FILA_DIA1 = 14, FILA_TOTAL = 45;
 
 const $ = id => document.getElementById(id);
 function cargarAjustes(){ try{ return {...AJUSTES_DEF, ...JSON.parse(localStorage.getItem('ajustes')||'{}')}; }catch(e){ return {...AJUSTES_DEF}; } }
@@ -176,6 +215,7 @@ function parseImporte(s){
   return isFinite(n) ? Math.round(n*100)/100 : NaN;
 }
 const r2 = n => Math.round(n*100)/100;
+const fmtNum = n => String(r2(n));
 function hoyISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function diasMes(y,m){ return new Date(y,m,0).getDate(); }
 function toast(msg, ms=2600){ const t=$('toast'); t.textContent=msg; t.classList.add('ver'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('ver'), ms); }
@@ -187,6 +227,8 @@ function descargar(blob, nombre){
 function blobABase64(blob){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(blob); }); }
 function blobADataURL(blob){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(blob); }); }
 const nuevoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const normal = s => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const fechaCorta = f => f ? f.split('-').reverse().join('/') : 'sin fecha';
 
 // ---------- Base de datos (IndexedDB, en el móvil) ----------
 const DB = {
@@ -196,17 +238,25 @@ const DB = {
     r.onsuccess=()=>{ this.db=r.result; res(); }; r.onerror=()=>rej(r.error); }); },
   _req(modo, fn){ return new Promise((res,rej)=>{ const st=this.db.transaction('tickets',modo).objectStore('tickets'); const r=fn(st); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); },
   todos(){ return this._req('readonly', st=>st.getAll()); },
-  guardar(t){ return this._req('readwrite', st=>st.put(t)); },
+  guardar(t){ const c={...t}; delete c._num; return this._req('readwrite', st=>st.put(c)); },
   borrar(id){ return this._req('readwrite', st=>st.delete(id)); },
 };
 let TICKETS = [];
 async function recargar(){ TICKETS = await DB.todos(); pintar(); }
 
 // ---------- Numeración y agrupación ----------
-const esTelpark = t => /telpark/i.test((t.establecimiento||'')+' '+(t.comentario||''));
-function ticketsDelMes(ym){ return TICKETS.filter(t=>t.fecha && t.fecha.slice(0,7)===ym); }
-function ordenar(lista){ return [...lista].sort((a,b)=> a.fecha<b.fecha?-1 : a.fecha>b.fecha?1 : (a.orden-b.orden)); }
-// Devuelve la lista ordenada con t._num (número de justificante o null si solo suma)
+const esTelpark = t => /telpark/i.test((t.establecimiento||'')+' '+(t.comentario||'')+' '+(t.clave||''));
+const listos = lista => lista.filter(t=>t.estado!=='pendiente' && t.fecha);
+function ticketsDelMes(ym){ return listos(TICKETS).filter(t=>t.fecha.slice(0,7)===ym); }
+// Orden: fecha → columna del Excel → orden manual
+function ordenar(lista){ return [...lista].sort((a,b)=> a.fecha<b.fecha?-1 : a.fecha>b.fecha?1 : ((CAT_IDX[a.categoria]??9)-(CAT_IDX[b.categoria]??9)) || (a.orden-b.orden)); }
+// La comisión de Telpark va en un ticket aparte, pequeño (0,10-0,40 €): se suma sin nº propio
+function esComisionTelpark(t, dia){
+  if(t.categoria!=='parking' || !esTelpark(t)) return false;
+  const otros = dia.filter(x=>x!==t && x.categoria==='parking' && esTelpark(x));
+  const max = otros.reduce((m,x)=>Math.max(m,x.importe||0),0);
+  return max>0 && (t.importe||0) < 0.5 && (t.importe||0) <= max*0.5;
+}
 function numerar(lista){
   const ord = ordenar(lista);
   const porDia = {};
@@ -214,19 +264,27 @@ function numerar(lista){
   const lleva = new Map();
   for(const f in porDia){
     const dia = porDia[f];
-    const tp = dia.filter(t=>t.categoria==='parking' && esTelpark(t));
-    const maxTp = tp.reduce((m,t)=>Math.max(m,t.importe||0),0);
     dia.forEach(t=>{
       let v = true;
       if(t.numerar==='si') v = true;
       else if(t.numerar==='no') v = false;
-      else if(tp.includes(t) && tp.length>1 && (t.importe||0) <= 0.3 && (t.importe||0) < maxTp) v = false; // comisión Telpark
+      else if(esComisionTelpark(t, dia)) v = false;
       lleva.set(t.id, v);
     });
   }
   let n = 0;
   ord.forEach(t=>{ t._num = lleva.get(t.id) ? ++n : null; });
   return ord;
+}
+// "Parking Megalab" + "Parking FJD" + "Comida Oficina" → "Parking Megalab y FJD y Comida Oficina"
+function unirComentarios(lista){
+  const partes = [];
+  for(const c of lista){
+    const p = c.split(' '), ant = partes[partes.length-1];
+    if(ant && p.length>1 && normal(ant.prim)===normal(p[0])) ant.resto.push(p.slice(1).join(' '));
+    else partes.push({prim:p[0], resto:p.length>1?[p.slice(1).join(' ')]:[]});
+  }
+  return partes.map(x=>[x.prim, x.resto.join(' y ')].filter(Boolean).join(' ')).join(' y ');
 }
 function filasDelMes(ym){
   const [y,m] = ym.split('-').map(Number);
@@ -235,17 +293,67 @@ function filasDelMes(ym){
   for(let d=1; d<=diasMes(y,m); d++){
     const f = ym+'-'+String(d).padStart(2,'0');
     const ts = ord.filter(t=>t.fecha===f);
-    const sumas = {}; CATS.forEach(c=>sumas[c.id]=0);
-    ts.forEach(t=>{ sumas[t.categoria||'varios'] = r2(sumas[t.categoria||'varios'] + (t.importe||0)); });
-    const nums = ts.filter(t=>t._num).map(t=>t._num).join(' ');
-    const coms = [...new Set(ts.map(t=>(t.comentario||'').trim()).filter(Boolean))].join(' y ');
-    filas.push({dia:d, nums, sumas, coment:coms, total:r2(ts.reduce((a,t)=>a+(t.importe||0),0))});
+    const sumas = {}, partes = {};
+    CATS.forEach(c=>{ sumas[c.id]=0; partes[c.id]=[]; });
+    ts.forEach(t=>{ const c=CAT_POR_ID[t.categoria]?t.categoria:'varios'; sumas[c]=r2(sumas[c]+(t.importe||0)); partes[c].push(t.importe||0); });
+    const nums = ts.filter(t=>t._num).map(t=>t._num);
+    const coms = unirComentarios([...new Set(ts.map(t=>(t.comentario||'').trim()).filter(Boolean))]);
+    filas.push({dia:d, nums, sumas, partes, coment:coms, total:r2(ts.reduce((a,t)=>a+(t.importe||0),0))});
   }
   return {filas, ord};
 }
 
-// ---------- Pintar lista ----------
+// ---------- Aprendizaje: lo que ya has guardado antes ----------
+// Cada ticket guarda una "clave" (p. ej. "Telpark zona B32"). Si vuelve a salir, se usa el mismo comentario.
+function memoria(){
+  const mapa = new Map();
+  [...listos(TICKETS)].filter(t=>t.estado!=='revisar' && t.clave && t.comentario)
+    .sort((a,b)=>(a.editado||a.creado||0)-(b.editado||b.creado||0))
+    .forEach(t=>mapa.set(normal(t.clave), {clave:t.clave, comentario:t.comentario, categoria:t.categoria}));
+  return mapa;
+}
+function buscarAprendido(clave, establecimiento){
+  const mem = memoria();
+  const k = normal(clave);
+  if(k && mem.has(k)) return mem.get(k);
+  // misma clave con palabras de más (p. ej. "Telpark B32" y "Telpark zona B32"); mínimo 2 palabras en común
+  const tk = k.split(' ').filter(Boolean);
+  for(const [mk,v] of mem){
+    const tm = mk.split(' ').filter(Boolean);
+    const [corta, larga] = tk.length<=tm.length ? [tk,tm] : [tm,tk];
+    if(corta.length>=2 && corta.every(w=>larga.includes(w))) return v;
+  }
+  return null;
+}
+
+// ---------- Pintar ----------
 function mesActual(){ return $('mes').value; }
+function crearFilaTicket(t, opciones={}){
+  const el = document.createElement('div'); el.className='ticket'+(t.estado==='revisar'?' revisar':'');
+  const num = document.createElement('div');
+  if(t.estado==='pendiente'){ num.className='num pend'; num.textContent='⏳'; }
+  else { num.className='num'+(t._num?'':' suma'); num.textContent = t._num ?? '+'; }
+  const info = document.createElement('div'); info.className='info';
+  const b = document.createElement('b');
+  if(t.estado==='revisar'){ const e=document.createElement('span'); e.className='etq'; e.textContent='REVISAR'; b.appendChild(e); }
+  b.appendChild(document.createTextNode(t.estado==='pendiente' ? 'Foto pendiente de leer' : (t.comentario || '(sin comentario)')));
+  const s = document.createElement('small');
+  s.textContent = t.estado==='pendiente' ? 'Se leerá sola cuando haya conexión'
+    : (opciones.conFecha? fechaCorta(t.fecha)+' · ' : '') + (CAT_POR_ID[t.categoria]?.nombre||'Varios') + (t.establecimiento? ' · '+t.establecimiento : '') + (t.foto? ' · 📷':'');
+  info.append(b,s);
+  const imp = document.createElement('div'); imp.className='imp'; imp.textContent = t.estado==='pendiente' ? '' : euros(t.importe);
+  el.append(num, info, imp);
+  if(opciones.flechas){
+    const fl = document.createElement('div'); fl.className='flechas';
+    const up = document.createElement('button'); up.textContent='▲'; up.setAttribute('aria-label','Subir');
+    const dn = document.createElement('button'); dn.textContent='▼'; dn.setAttribute('aria-label','Bajar');
+    up.onclick = e=>{ e.stopPropagation(); mover(t,-1); };
+    dn.onclick = e=>{ e.stopPropagation(); mover(t,1); };
+    fl.append(up,dn); el.appendChild(fl);
+  }
+  el.onclick = ()=>abrirEditor(t);
+  return el;
+}
 function pintar(){
   const ym = mesActual();
   const ord = numerar(ticketsDelMes(ym));
@@ -253,7 +361,8 @@ function pintar(){
   $('totalMes').textContent = euros(ord.reduce((a,t)=>a+(t.importe||0),0));
   // sugerencias de comentarios
   const dl = $('dlComentarios'); dl.innerHTML='';
-  [...new Set(TICKETS.map(t=>(t.comentario||'').trim()).filter(Boolean))].slice(-60).forEach(c=>{ const o=document.createElement('option'); o.value=c; dl.appendChild(o); });
+  [...new Set(TICKETS.map(t=>(t.comentario||'').trim()).filter(Boolean))].slice(-80).forEach(c=>{ const o=document.createElement('option'); o.value=c; dl.appendChild(o); });
+  pintarAvisos();
   if(!ord.length){
     cont.innerHTML = '<div class="vacio">No hay tickets este mes.<br>Pulsa <b>📷 Foto</b> para añadir el primero.</div>';
     return;
@@ -266,41 +375,38 @@ function pintar(){
       cabecera = document.createElement('div'); cabecera.className='dia';
       const d = new Date(t.fecha+'T12:00:00');
       const a = document.createElement('span'); a.textContent = d.toLocaleDateString('es-ES',{weekday:'long', day:'numeric', month:'short'});
-      const b = document.createElement('span');
-      cabecera.append(a,b); cont.appendChild(cabecera);
+      cabecera.append(a, document.createElement('span')); cont.appendChild(cabecera);
     }
     totalDia += t.importe||0;
-    const delDia = ord.filter(x=>x.fecha===t.fecha);
-    const el = document.createElement('div'); el.className='ticket';
-    const num = document.createElement('div'); num.className='num'+(t._num?'':' suma'); num.textContent = t._num ?? '+';
-    num.title = t._num ? 'Nº justificante' : 'Solo suma, sin nº';
-    const info = document.createElement('div'); info.className='info';
-    const b = document.createElement('b'); b.textContent = t.comentario || '(sin comentario)';
-    const s = document.createElement('small'); s.textContent = (CAT_POR_ID[t.categoria]?.nombre||'Varios') + (t.establecimiento? ' · '+t.establecimiento : '') + (t.foto? ' · 📷':'');
-    info.append(b,s);
-    const imp = document.createElement('div'); imp.className='imp'; imp.textContent = euros(t.importe);
-    el.append(num, info, imp);
-    if(delDia.length>1){
-      const fl = document.createElement('div'); fl.className='flechas';
-      const up = document.createElement('button'); up.textContent='▲'; up.setAttribute('aria-label','Subir');
-      const dn = document.createElement('button'); dn.textContent='▼'; dn.setAttribute('aria-label','Bajar');
-      up.onclick = e=>{ e.stopPropagation(); mover(t,-1); };
-      dn.onclick = e=>{ e.stopPropagation(); mover(t,1); };
-      fl.append(up,dn); el.appendChild(fl);
-    }
-    el.onclick = ()=>abrirEditor(t);
-    cont.appendChild(el);
+    const mismos = ord.filter(x=>x.fecha===t.fecha && x.categoria===t.categoria);
+    cont.appendChild(crearFilaTicket(t, {flechas: mismos.length>1}));
   });
   cerrar();
 }
+function pintarAvisos(){
+  const av = $('avisos'); av.innerHTML='';
+  const pend = TICKETS.filter(t=>t.estado==='pendiente');
+  const rev = ordenar(TICKETS.filter(t=>t.estado==='revisar'));
+  if(rev.length){
+    const d = document.createElement('div'); d.className='aviso';
+    d.innerHTML = `<h3>✅ ${rev.length===1?'1 ticket leído':rev.length+' tickets leídos'} sin conexión</h3><p>${rev.length===1?'La IA lo leyó al volver la cobertura. Tócalo para revisarlo y guardarlo.':'La IA los leyó al volver la cobertura. Tócalos para revisarlos y guardarlos.'}</p>`;
+    rev.forEach(t=>d.appendChild(crearFilaTicket(t,{conFecha:true})));
+    av.appendChild(d);
+  }
+  if(pend.length){
+    const d = document.createElement('div'); d.className='aviso pend';
+    d.innerHTML = `<h3>⏳ ${pend.length===1?'1 foto pendiente':pend.length+' fotos pendientes'} de leer</h3><p>${navigator.onLine?'Leyendo…':'Se leerán solas cuando vuelva la conexión.'}</p>`;
+    pend.forEach(t=>d.appendChild(crearFilaTicket(t)));
+    av.appendChild(d);
+  }
+}
 async function mover(t, dir){
-  const dia = ordenar(TICKETS.filter(x=>x.fecha===t.fecha));
-  const i = dia.findIndex(x=>x.id===t.id), j = i+dir;
-  if(j<0 || j>=dia.length) return;
-  // reasignar órdenes consecutivos y luego intercambiar
-  dia.forEach((x,k)=>x.orden=k);
-  [dia[i].orden, dia[j].orden] = [dia[j].orden, dia[i].orden];
-  for(const x of dia){ const c={...x}; delete c._num; await DB.guardar(c); }
+  const grupo = ordenar(listos(TICKETS).filter(x=>x.fecha===t.fecha && x.categoria===t.categoria));
+  const i = grupo.findIndex(x=>x.id===t.id), j = i+dir;
+  if(j<0 || j>=grupo.length) return;
+  grupo.forEach((x,k)=>x.orden=k);
+  [grupo[i].orden, grupo[j].orden] = [grupo[j].orden, grupo[i].orden];
+  for(const x of grupo) await DB.guardar(x);
   await recargar();
 }
 
@@ -317,42 +423,94 @@ async function prepararFoto(file){
   return {blob, w:c.width, h:c.height};
 }
 
+// ---------- Cámara propia (se abre directamente, sin preguntar) ----------
+let stream = null, linterna = false;
+async function abrirCamara(){
+  if(!navigator.mediaDevices?.getUserMedia){ $('inCamara').click(); return; }
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:{ideal:'environment'}, width:{ideal:3840}, height:{ideal:2160}}});
+  }catch(e){ toast('No se pudo abrir la cámara ('+e.name+')'); $('inCamara').click(); return; }
+  const v = $('video'); v.srcObject = stream;
+  $('camara').classList.add('ver');
+  try{ await v.play(); }catch(e){}
+  const track = stream.getVideoTracks()[0];
+  const caps = track.getCapabilities ? track.getCapabilities() : {};
+  linterna = false;
+  $('camFlash').style.visibility = caps.torch ? 'visible' : 'hidden';
+  $('camMsg').textContent = 'Encuadra el ticket entero';
+}
+function cerrarCamara(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  $('video').srcObject = null;
+  $('camara').classList.remove('ver');
+}
+$('camCerrar').onclick = cerrarCamara;
+$('camFlash').onclick = async ()=>{
+  const track = stream?.getVideoTracks()[0]; if(!track) return;
+  linterna = !linterna;
+  try{ await track.applyConstraints({advanced:[{torch:linterna}]}); }catch(e){ toast('Linterna no disponible'); }
+};
+$('disparador').onclick = async ()=>{
+  if(!stream) return;
+  $('camMsg').textContent = 'Guardando foto…';
+  const track = stream.getVideoTracks()[0];
+  let blob = null;
+  if('ImageCapture' in window){ try{ blob = await new ImageCapture(track).takePhoto(); }catch(e){} }
+  if(!blob){
+    const v = $('video'), c = document.createElement('canvas');
+    c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v,0,0);
+    blob = await new Promise(r=>c.toBlob(r,'image/jpeg',0.92));
+  }
+  cerrarCamara();
+  cola = [];
+  nuevoDesdeFoto(blob).catch(()=>toast('No se pudo procesar la foto'));
+};
+
 // ---------- IA (Claude, llamada directa desde el móvil) ----------
 function promptIA(){
+  const mem = [...memoria().values()].slice(-60);
+  const hist = mem.length ? `\nSitios que este usuario ya ha registrado antes (clave → comentario que usó). Si el ticket es de uno de ellos, devuelve EXACTAMENTE esa misma clave y ese mismo comentario:\n${mem.map(m=>`- "${m.clave}" → "${m.comentario}"`).join('\n')}\n` : '';
   return `Lee este ticket de gasto de un técnico de Euroimmun (oficina en Madrid) para su nota de gastos mensual.
 Responde SOLO con un JSON, sin texto alrededor, con este formato:
-{"fecha":"AAAA-MM-DD o null","importe":número o null,"categoria":"gasolina|parking|otros_transportes|comidas|invitaciones|reuniones|varios","establecimiento":"texto","ciudad":"texto","comentario":"texto corto","es_comision":true|false}
+{"fecha":"AAAA-MM-DD o null","importe":número o null,"categoria":"gasolina|parking|otros_transportes|comidas|invitaciones|reuniones|varios","establecimiento":"texto","ciudad":"texto","clave":"texto","comentario":"texto corto","es_comision":true|false}
 Reglas:
 - importe: el TOTAL pagado (IVA incluido), con punto decimal.
 - fecha: la del ticket (formato español dd/mm/aa). Si no aparece el año usa ${new Date().getFullYear()}.
-- categoria: gasolina = gasolineras/combustible; parking = aparcamientos, Telpark, EasyPark, ElParking, zona azul/SER; otros_transportes = taxi, Cabify/Uber, tren, metro, autobús, peaje; comidas = restaurantes, bares, cafeterías, hoteles; varios = el resto.
-- comentario: muy breve, en el estilo de estos ejemplos: "Comida León", "Cena León", "Desayuno y Comida Talavera", "Comida Gómez Ulla", "Parking FJD", "Gasolina", "Taxi Valladolid". Para comidas usa desayuno (antes de las 11:30), comida (11:30-17:00) o cena (después) según la hora del ticket. Si es fuera de Madrid pon la ciudad; si es en Madrid pon el sitio (hospital, centro) o el establecimiento. Si la ciudad es una de estas: ${ajustes.oficina}, el comentario de una comida es "Comida Oficina".
-- Hospitales conocidos: Fundación Jiménez Díaz = FJD; Hospital Central de la Defensa Gómez Ulla = Gómez Ulla; Hospital Río Hortega = Rio Hortega.
-- es_comision: true solo si el ticket es únicamente una comisión o gasto de gestión aparte (por ejemplo Telpark cobra unos 0,10 € de comisión en otro ticket).`;
+- categoria: gasolina = gasolineras/combustible; parking = aparcamientos, Telpark, EasyPark, ElParking, zona azul/SER; otros_transportes = taxi, Cabify/Uber, tren, metro, autobús, peaje; comidas = restaurantes, bares, cafeterías, hoteles, supermercados de comida; varios = el resto.
+- clave: identificador corto y estable del sitio concreto para reconocerlo en el futuro. Para parkings incluye la zona, código o nombre del aparcamiento si aparece (p. ej. "Telpark zona B32", "Parking Fundación Jiménez Díaz"). Para el resto, establecimiento y ciudad (p. ej. "Restaurante El Bierzo, León").
+- comentario: muy breve, en el estilo de estos ejemplos: "Comida Oficina", "Comida León", "Cena León", "Desayuno y Comida Talavera", "Comida Gomez Ulla", "Parking Megalab", "Parking FJD", "Gasolina", "Taxi Valladolid". Para comidas usa desayuno (antes de las 11:30), comida (11:30-17:00) o cena (después) según la hora. Si es fuera de Madrid pon la ciudad; si es en Madrid pon el sitio (hospital, centro) o el establecimiento. Si la ciudad es una de estas: ${ajustes.oficina}, el comentario de una comida es "Comida Oficina".
+- Hospitales conocidos: Fundación Jiménez Díaz = FJD; Hospital Central de la Defensa Gómez Ulla = Gomez Ulla; Hospital Río Hortega = Rio Hortega.
+- es_comision: true solo si el ticket es únicamente una comisión o gasto de gestión aparte (Telpark cobra una comisión de unos céntimos en otro ticket).${hist}`;
 }
+class ErrorRed extends Error {}
 async function leerTicketIA(fotoBlob){
   if(!ajustes.key) throw new Error('Falta la clave de API. Ponla en ⚙️ Ajustes o rellena a mano.');
+  if(!navigator.onLine) throw new ErrorRed('sin conexión');
   const data = await blobABase64(fotoBlob);
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers:{
-      'content-type':'application/json',
-      'x-api-key': ajustes.key,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true'
-    },
-    body: JSON.stringify({
-      model: ajustes.modelo || AJUSTES_DEF.modelo,
-      max_tokens: 2000,
-      messages:[{role:'user', content:[
-        {type:'image', source:{type:'base64', media_type:'image/jpeg', data}},
-        {type:'text', text: promptIA()}
-      ]}]
-    })
-  });
+  let resp;
+  try{
+    resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key': ajustes.key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model: ajustes.modelo || AJUSTES_DEF.modelo,
+        max_tokens: 2000,
+        messages:[{role:'user', content:[
+          {type:'image', source:{type:'base64', media_type:'image/jpeg', data}},
+          {type:'text', text: promptIA()}
+        ]}]
+      })
+    });
+  }catch(e){ throw new ErrorRed('sin conexión'); }
   if(!resp.ok){
     let msg = 'HTTP '+resp.status;
     try{ const j = await resp.json(); msg += ': ' + (j.error?.message || ''); }catch(e){}
+    if(resp.status>=500 || resp.status===429) throw new ErrorRed(msg);
     throw new Error(msg);
   }
   const j = await resp.json();
@@ -362,27 +520,44 @@ async function leerTicketIA(fotoBlob){
     const tipos = (j.content||[]).map(c=>c.type).join(',') || 'ninguno';
     throw new Error(`respuesta sin datos (fin: ${j.stop_reason||'?'}, bloques: ${tipos}, modelo: ${j.model||'?'}). Texto: «${txt.slice(0,160) || '(vacío)'}»`);
   }
-  try{ return JSON.parse(txt.slice(ini, fin+1)); }
+  let r;
+  try{ r = JSON.parse(txt.slice(ini, fin+1)); }
   catch(e){ throw new Error('JSON no válido: «'+txt.slice(ini, ini+160)+'»'); }
+  // Aprendizaje: si ya conocemos ese sitio, mismo comentario y columna que la última vez
+  const ap = buscarAprendido(r.clave, r.establecimiento);
+  if(ap){ r.comentario = ap.comentario; if(CAT_POR_ID[ap.categoria]) r.categoria = ap.categoria; r.clave = ap.clave; r._aprendido = true; }
+  return r;
+}
+// Convierte la respuesta de la IA en campos del ticket
+function aplicarLectura(t, r){
+  const out = {};
+  if(r.fecha && /^\d{4}-\d{2}-\d{2}$/.test(r.fecha)) out.fecha = r.fecha;
+  const imp = parseImporte(r.importe); if(r.importe!=null && !isNaN(imp)) out.importe = imp;
+  if(CAT_POR_ID[r.categoria]) out.categoria = r.categoria;
+  if(r.comentario) out.comentario = String(r.comentario).trim();
+  if(r.establecimiento) out.establecimiento = String(r.establecimiento).trim();
+  if(r.es_comision===true) out.numerar = 'no';
+  t.clave = r.clave || t.clave || '';
+  t.ciudad = r.ciudad || t.ciudad || '';
+  return out;
 }
 
 // ---------- Editor ----------
-let editando = null;   // ticket en edición
-let esNuevo = false;
-let tocados = new Set();
-let cola = [];         // fotos pendientes (galería múltiple)
-let leyendo = 0;
+let editando = null, esNuevo = false, tocados = new Set(), cola = [], leyendo = 0, sinRed = false;
 const CAMPOS = ['f_fecha','f_importe','f_categoria','f_comentario','f_establecimiento','f_numerar'];
+const CAMPO_A = {fecha:'f_fecha', importe:'f_importe', categoria:'f_categoria', comentario:'f_comentario', establecimiento:'f_establecimiento', numerar:'f_numerar'};
 CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.nombre; $('f_categoria').appendChild(o); });
 CAMPOS.forEach(id=>$(id).addEventListener('input', ()=>tocados.add(id)));
 
 function estadoIA(html, clase=''){ const e=$('estadoIA'); e.style.display = html?'block':'none'; e.className=clase; e.innerHTML=html||''; }
+const fmtImp = n => (n!=null && !isNaN(n)) ? Number(n).toFixed(2).replace('.',',') : '';
 
 function abrirEditor(t, nuevo=false){
-  editando = t; esNuevo = nuevo; tocados = new Set();
-  $('tituloTicket').textContent = nuevo ? 'Nuevo ticket' + (cola.length? ` (quedan ${cola.length})`:'') : 'Editar ticket';
+  editando = t; esNuevo = nuevo; tocados = new Set(); sinRed = false;
+  $('tituloTicket').textContent = nuevo ? 'Nuevo ticket' + (cola.length? ` (quedan ${cola.length})`:'')
+                                : t.estado==='revisar' ? 'Revisar ticket' : t.estado==='pendiente' ? 'Foto pendiente' : 'Editar ticket';
   $('f_fecha').value = t.fecha || '';
-  $('f_importe').value = (t.importe!=null && !isNaN(t.importe)) ? t.importe.toFixed(2).replace('.',',') : '';
+  $('f_importe').value = fmtImp(t.importe);
   $('f_categoria').value = t.categoria || 'comidas';
   $('f_comentario').value = t.comentario || '';
   $('f_establecimiento').value = t.establecimiento || '';
@@ -392,32 +567,31 @@ function abrirEditor(t, nuevo=false){
   if(t.foto){ img.src = URL.createObjectURL(t.foto); img.style.display='block'; } else { img.removeAttribute('src'); img.style.display='none'; }
   $('btnBorrar').style.display = nuevo ? 'none':'flex';
   $('btnReleer').style.display = t.foto ? 'flex':'none';
-  estadoIA('');
+  if(t.estado==='revisar') estadoIA('🤖 Leído automáticamente al volver la conexión. Comprueba los datos y pulsa Guardar.', 'pend');
+  else if(t.estado==='pendiente') estadoIA('⏳ Aún sin leer. Se leerá sola cuando haya conexión, o rellénalo tú y guarda.', 'pend');
+  else estadoIA('');
   if(!$('dlgTicket').open) $('dlgTicket').showModal();
 }
 async function analizar(t){
   const miLectura = ++leyendo;
+  sinRed = false;
+  if(!navigator.onLine){ sinRed = true; estadoIA('📴 Sin conexión. Pulsa <b>Guardar</b> y la IA lo leerá sola cuando vuelva la cobertura (te avisaré).', 'pend'); return; }
   estadoIA('<span class="spin"></span>Leyendo el ticket con IA…');
   try{
     const r = await leerTicketIA(t.foto);
     if(miLectura!==leyendo || editando!==t) return;
-    const pon = (id, v)=>{ if(v!=null && v!=='' && !tocados.has(id)) $(id).value = v; };
-    if(r.fecha && /^\d{4}-\d{2}-\d{2}$/.test(r.fecha)) pon('f_fecha', r.fecha);
-    if(r.importe!=null && !isNaN(parseImporte(r.importe))) pon('f_importe', parseImporte(r.importe).toFixed(2).replace('.',','));
-    if(CAT_POR_ID[r.categoria]) pon('f_categoria', r.categoria);
-    pon('f_comentario', r.comentario);
-    pon('f_establecimiento', r.establecimiento);
-    if(r.es_comision===true) pon('f_numerar','no');
-    t.ciudad = r.ciudad || t.ciudad || '';
-    estadoIA('✅ Leído. Revisa los datos y pulsa Guardar.', 'ok');
+    const datos = aplicarLectura(t, r);
+    for(const k in datos){ const id=CAMPO_A[k]; if(!tocados.has(id)) $(id).value = k==='importe' ? fmtImp(datos[k]) : datos[k]; }
+    estadoIA(r._aprendido ? '📚 Leído. Sitio conocido: he puesto el mismo comentario que la última vez. Revisa y guarda.' : '✅ Leído. Revisa los datos y pulsa Guardar.', 'ok');
   }catch(e){
     if(miLectura!==leyendo || editando!==t) return;
-    estadoIA('⚠️ No se pudo leer con IA: '+ (e.message||e) + '<br>Puedes rellenarlo a mano.', 'err');
+    if(e instanceof ErrorRed){ sinRed = true; estadoIA('📴 No hay conexión. Pulsa <b>Guardar</b> y la IA lo leerá sola cuando vuelva la cobertura (te avisaré).', 'pend'); }
+    else estadoIA('⚠️ No se pudo leer con IA: '+ (e.message||e) + '<br>Puedes rellenarlo a mano.', 'err');
   }
 }
 async function nuevoDesdeFoto(file){
   const {blob,w,h} = await prepararFoto(file);
-  const t = {id:nuevoId(), fecha:'', importe:NaN, categoria:'comidas', comentario:'', establecimiento:'', ciudad:'', numerar:'auto', foto:blob, fotoW:w, fotoH:h, orden:Date.now(), creado:Date.now()};
+  const t = {id:nuevoId(), fecha:'', importe:NaN, categoria:'comidas', comentario:'', establecimiento:'', ciudad:'', clave:'', numerar:'auto', foto:blob, fotoW:w, fotoH:h, orden:Date.now(), creado:Date.now()};
   abrirEditor(t, true);
   analizar(t);
 }
@@ -437,15 +611,23 @@ $('btnGuardar').onclick = async ()=>{
   const t = editando; if(!t) return;
   const fecha = $('f_fecha').value;
   const importe = parseImporte($('f_importe').value);
+  // Sin datos y con foto: se guarda pendiente para que la IA la lea al volver la conexión
+  if(t.foto && (!fecha || isNaN(importe)) && (sinRed || t.estado==='pendiente' || !navigator.onLine)){
+    Object.assign(t, {estado:'pendiente', fecha:'', importe:NaN, editado:Date.now()});
+    await DB.guardar(t); await recargar();
+    toast('Guardada. Se leerá sola cuando haya conexión'); cerrarEditor(); return;
+  }
   if(!fecha){ toast('Pon la fecha'); $('f_fecha').focus(); return; }
   if(isNaN(importe)){ toast('Pon el importe'); $('f_importe').focus(); return; }
-  if(fecha!==t.fecha) t.orden = Date.now();   // al cambiar de día, va al final de ese día
-  Object.assign(t, {fecha, importe, categoria:$('f_categoria').value, comentario:$('f_comentario').value.trim(),
-                    establecimiento:$('f_establecimiento').value.trim(), numerar:$('f_numerar').value});
-  const copia = {...t}; delete copia._num;
-  await DB.guardar(copia);
-  if(fecha.slice(0,7)!==mesActual()){ $('mes').value = fecha.slice(0,7); toast('Guardado en '+MESES[+fecha.slice(5,7)-1].toLowerCase()); }
-  else toast('Guardado');
+  if(fecha!==t.fecha) t.orden = Date.now();
+  const coment = $('f_comentario').value.trim();
+  if(!t.clave && coment) t.clave = $('f_establecimiento').value.trim(); // los tickets a mano también enseñan
+  Object.assign(t, {fecha, importe, categoria:$('f_categoria').value, comentario:coment,
+                    establecimiento:$('f_establecimiento').value.trim(), numerar:$('f_numerar').value, editado:Date.now()});
+  delete t.estado;
+  await DB.guardar(t);
+  if(fecha.slice(0,7)!==mesActual()) $('mes').value = fecha.slice(0,7);
+  toast('Guardado');
   await recargar();
   cerrarEditor();
 };
@@ -458,32 +640,74 @@ $('btnBorrar').onclick = async ()=>{
 };
 $('btnReleer').onclick = ()=>{ if(editando?.foto){ tocados = new Set(); analizar(editando); } };
 
+$('btnFoto').onclick = ()=>abrirCamara();
 $('inCamara').onchange = e=>{ const f=e.target.files[0]; e.target.value=''; if(f){ cola=[]; nuevoDesdeFoto(f).catch(()=>toast('No se pudo abrir la foto')); } };
 $('inGaleria').onchange = e=>{ const fs=[...e.target.files]; e.target.value=''; if(fs.length){ cola = fs; siguienteDeCola(); } };
 $('btnManual').onclick = ()=>{
   const ym = mesActual();
   const fecha = hoyISO().slice(0,7)===ym ? hoyISO() : ym+'-01';
   cola=[];
-  abrirEditor({id:nuevoId(), fecha, importe:NaN, categoria:'comidas', comentario:'', establecimiento:'', ciudad:'', numerar:'auto', foto:null, orden:Date.now(), creado:Date.now()}, true);
+  abrirEditor({id:nuevoId(), fecha, importe:NaN, categoria:'comidas', comentario:'', establecimiento:'', ciudad:'', clave:'', numerar:'auto', foto:null, orden:Date.now(), creado:Date.now()}, true);
 };
 $('mes').onchange = pintar;
 
+// ---------- Lectura automática de pendientes al volver la conexión ----------
+let procesando = false;
+async function procesarPendientes(){
+  if(procesando || !navigator.onLine || !ajustes.key) return;
+  const pend = TICKETS.filter(t=>t.estado==='pendiente' && t.foto);
+  if(!pend.length) return;
+  procesando = true;
+  let leidos = 0;
+  try{
+    for(const t of pend){
+      if(editando && editando.id===t.id) continue;
+      let r;
+      try{ r = await leerTicketIA(t.foto); }
+      catch(e){ if(e instanceof ErrorRed) break; else continue; }
+      const d = aplicarLectura(t, r);
+      Object.assign(t, d);
+      if(!t.fecha) t.fecha = new Date(t.creado).toISOString().slice(0,10);
+      if(isNaN(t.importe) || t.importe==null) t.importe = 0;
+      t.estado = 'revisar';
+      await DB.guardar(t); leidos++;
+    }
+  } finally { procesando = false; }
+  if(leidos){
+    await recargar();
+    toast(leidos===1 ? '✅ 1 ticket leído: revísalo arriba' : `✅ ${leidos} tickets leídos: revísalos arriba`, 4500);
+    try{ navigator.vibrate && navigator.vibrate([120,80,120]); }catch(e){}
+  }
+}
+function estadoRed(){ $('red').style.display = navigator.onLine ? 'none' : 'inline-block'; }
+window.addEventListener('online', ()=>{ estadoRed(); pintarAvisos(); procesarPendientes(); });
+window.addEventListener('offline', ()=>{ estadoRed(); pintarAvisos(); });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) procesarPendientes(); });
+setInterval(procesarPendientes, 90000);
+
 // ---------- Ajustes ----------
+function pintarAprendido(){
+  const mem = [...memoria().values()];
+  $('aprendido').innerHTML = '';
+  if(!mem.length){ $('aprendido').textContent = 'Todavía nada. Cada ticket que guardes le enseña el comentario de ese sitio.'; return; }
+  mem.slice(-30).reverse().forEach(m=>{ const d=document.createElement('div'); d.textContent = `${m.clave} → ${m.comentario}`; $('aprendido').appendChild(d); });
+}
 $('btnAjustes').onclick = ()=>{
   $('a_key').value=ajustes.key; $('a_modelo').value=ajustes.modelo; $('a_oficina').value=ajustes.oficina;
   $('a_apellidos').value=ajustes.apellidos; $('a_nombre').value=ajustes.nombre; $('a_depto').value=ajustes.depto;
+  pintarAprendido();
   $('dlgAjustes').showModal();
 };
 $('btnCerrarAjustes').onclick = ()=>$('dlgAjustes').close();
 $('btnGuardarAjustes').onclick = ()=>{
   ajustes = {key:$('a_key').value.trim(), modelo:$('a_modelo').value.trim()||AJUSTES_DEF.modelo, oficina:$('a_oficina').value.trim(),
              apellidos:$('a_apellidos').value.trim(), nombre:$('a_nombre').value.trim(), depto:$('a_depto').value.trim()};
-  guardarAjustesLS(ajustes); $('dlgAjustes').close(); toast('Ajustes guardados');
+  guardarAjustesLS(ajustes); $('dlgAjustes').close(); toast('Ajustes guardados'); procesarPendientes();
 };
 $('btnBackup').onclick = async ()=>{
   const out = [];
   for(const t of TICKETS){ const c={...t}; delete c._num; if(c.foto) c.foto = await blobADataURL(c.foto); out.push(c); }
-  descargar(new Blob([JSON.stringify({app:'tickets-gastos', version:1, fecha:new Date().toISOString(), tickets:out})],{type:'application/json'}),
+  descargar(new Blob([JSON.stringify({app:'tickets-gastos', version:2, fecha:new Date().toISOString(), tickets:out})],{type:'application/json'}),
             'copia-tickets-'+hoyISO()+'.json');
 };
 $('inBackup').onchange = async e=>{
@@ -496,7 +720,7 @@ $('inBackup').onchange = async e=>{
   }catch(err){ toast('Copia no válida'); }
 };
 
-// ---------- ZIP (para .xlsx) ----------
+// ---------- ZIP ----------
 const CRC_T = (()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
 function crc32(b){ let c=0xFFFFFFFF; for(let i=0;i<b.length;i++) c = CRC_T[(c^b[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
 function crearZip(archivos, tipo){
@@ -520,112 +744,95 @@ function crearZip(archivos, tipo){
   fin.setUint32(12,cdTam,true); fin.setUint32(16,off,true);
   return new Blob([...partes, ...central, new Uint8Array(fin.buffer)], {type:tipo});
 }
+async function leerZip(buf){
+  const dv = new DataView(buf), u8 = new Uint8Array(buf), dec = new TextDecoder();
+  let eocd = -1;
+  for(let i=u8.length-22; i>=0; i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) throw new Error('Plantilla no válida');
+  const n = dv.getUint16(eocd+10,true); let p = dv.getUint32(eocd+16,true);
+  const archivos = [];
+  for(let k=0;k<n;k++){
+    const metodo=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true), nlen=dv.getUint16(p+28,true),
+          elen=dv.getUint16(p+30,true), clen=dv.getUint16(p+32,true), off=dv.getUint32(p+42,true);
+    const name = dec.decode(u8.subarray(p+46, p+46+nlen));
+    const ini = off + 30 + dv.getUint16(off+26,true) + dv.getUint16(off+28,true);
+    let data = u8.slice(ini, ini+csize);
+    if(metodo===8) data = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+    else if(metodo!==0) throw new Error('Compresión no soportada');
+    archivos.push({name, data});
+    p += 46 + nlen + elen + clen;
+  }
+  return archivos;
+}
 
-// ---------- Excel ----------
+// ---------- Excel sobre tu plantilla de Euroimmun ----------
 const xe = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const COLS = 'ABCDEFGHIJKL';
-function generarExcel(ym){
+function ponCelda(xml, ref, tipo, valor){
+  const re = new RegExp(`<c r="${ref}"([^>]*?)(?:/>|>[\\s\\S]*?</c>)`);
+  const m = xml.match(re);
+  if(!m) throw new Error('Celda '+ref+' no está en la plantilla');
+  const s = (m[1].match(/ s="\d+"/)||[''])[0];
+  let nueva;
+  if(tipo==='n') nueva = `<c r="${ref}"${s}><v>${valor}</v></c>`;
+  else if(tipo==='s') nueva = `<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${xe(valor)}</t></is></c>`;
+  else if(tipo==='f') nueva = `<c r="${ref}"${s}><f>${valor[0]}</f><v>${valor[1]}</v></c>`;
+  else if(tipo==='cache'){ // mantener la fórmula de la plantilla, poner el valor calculado
+    const sinV = m[0].replace(/<v>[^<]*<\/v>/,'');
+    nueva = sinV.endsWith('/>') ? sinV : sinV.replace(/<\/c>$/, `<v>${valor}</v></c>`);
+  }
+  else nueva = `<c r="${ref}"${s}/>`;
+  return xml.replace(re, nueva);
+}
+async function generarExcel(ym){
   const [y,m] = ym.split('-').map(Number);
   const {filas} = filasDelMes(ym);
-  // Estilos: 0 normal,1 título grande,2 cabecera,3 borde texto,4 borde €,5 total €,6 borde centrado,7 negrita 14,8 negrita,9 pequeño gris,10 total texto
-  const S = {norm:0,tit:1,cab:2,txt:3,eur:4,tot:5,cen:6,b14:7,b:8,peq:9,totTxt:10};
-  const filasXml = [];
-  const celdas = (r, arr, alto) => {
-    const cs = arr.map(([col, tipo, v, s])=>{
-      const ref = col + r;
-      if(tipo==='s') return `<c r="${ref}" t="inlineStr" s="${s}"><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
-      if(tipo==='n') return `<c r="${ref}" s="${s}"><v>${v}</v></c>`;
-      if(tipo==='f') return `<c r="${ref}" s="${s}"><f>${v[0]}</f><v>${v[1]}</v></c>`;
-      return `<c r="${ref}" s="${s}"/>`;
-    }).join('');
-    filasXml.push(`<row r="${r}"${alto?` ht="${alto}" customHeight="1"`:''}>${cs}</row>`);
-  };
-  celdas(1, [['A','s','euroimmun',S.tit]], 30);
-  celdas(2, [['A','s','EUROIMMUN · Av. Somosierra, 22 - Nave 15A · 28703 · San Sebastián de los Reyes (Madrid)',S.peq]]);
-  celdas(4, [['A','s','NOTA DE GASTOS',S.b14],['D','s','APELLIDOS : '+ajustes.apellidos,S.b]]);
-  celdas(5, [['D','s','NOMBRE : '+ajustes.nombre,S.b],['I','s','DEPARTAMENTO : '+ajustes.depto,S.b]]);
-  celdas(7, [['D','s','MES Y AÑO: '+MESES[m-1]+' '+y,S.b]]);
-  const cab = ['DIA','Nº Justific.\nDesde-Hasta', ...CATS.map(c=>c.col), 'COMENTARIOS', 'SUBTOTAL\nDIARIO'];
-  const filaCab = 9;
-  celdas(filaCab, cab.map((h,i)=>[COLS[i],'s',h,S.cab]), 32);
-  const r0 = filaCab+1;
+  const resp = await fetch('plantilla.xlsx', {cache:'no-cache'}).catch(()=>null);
+  if(!resp || !resp.ok) throw new Error('No encuentro plantilla.xlsx (súbela a GitHub junto a index.html)');
+  const archivos = await leerZip(await resp.arrayBuffer());
+  const hoja = archivos.find(a=>a.name==='xl/worksheets/sheet1.xml');
+  let x = new TextDecoder().decode(hoja.data);
+  x = ponCelda(x, 'G7', 's', 'APELLIDOS : '+ajustes.apellidos);
+  x = ponCelda(x, 'G8', 's', 'NOMBRE : '+ajustes.nombre);
+  x = ponCelda(x, 'K8', 's', 'DEPARTAMENTO : '+ajustes.depto);
+  x = ponCelda(x, 'G10', 's', 'MES Y AÑO: '+MESES[m-1]+' '+y);
+  const tot = {}; CATS.forEach(c=>tot[c.id]=0);
+  let totalMes = 0, sumaB = 0;
   filas.forEach((f,i)=>{
-    const r = r0+i;
-    const arr = [['A','n',f.dia,S.cen], f.nums ? ['B','s',f.nums,S.cen] : ['B','e',null,S.cen]];
-    CATS.forEach((c,k)=>{ const v=f.sumas[c.id]; arr.push(v ? [COLS[2+k],'n',v,S.eur] : [COLS[2+k],'e',null,S.eur]); });
-    arr.push(f.coment ? ['J','s',f.coment,S.txt] : ['J','e',null,S.txt]);
-    arr.push(['K','f',[`SUM(C${r}:I${r})`, f.total],S.eur]);
-    celdas(r, arr);
+    const r = FILA_DIA1 + i;
+    if(f.nums.length===1){ x = ponCelda(x, 'B'+r, 'n', f.nums[0]); if(r>FILA_DIA1) sumaB += f.nums[0]; }
+    else if(f.nums.length>1) x = ponCelda(x, 'B'+r, 's', f.nums.join(' '));
+    CATS.forEach(c=>{
+      const p = f.partes[c.id];
+      if(p.length===1) x = ponCelda(x, c.col+r, 'n', fmtNum(p[0]));
+      else if(p.length>1) x = ponCelda(x, c.col+r, 'f', [p.map(fmtNum).join('+'), fmtNum(f.sumas[c.id])]); // como lo haces tú: =1+0.15
+      tot[c.id] = r2(tot[c.id] + f.sumas[c.id]);
+    });
+    if(f.coment) x = ponCelda(x, 'K'+r, 's', f.coment);
+    x = ponCelda(x, 'L'+r, 'cache', fmtNum(f.total));
+    totalMes = r2(totalMes + f.total);
   });
-  const rT = r0 + filas.length, rU = rT-1;
-  const tot = [['A','s','TOTAL',S.totTxt],['B','e',null,S.totTxt]];
-  CATS.forEach((c,k)=>{ const L=COLS[2+k]; const v=r2(filas.reduce((a,f)=>a+f.sumas[c.id],0)); tot.push([L,'f',[`SUM(${L}${r0}:${L}${rU})`, v],S.tot]); });
-  tot.push(['J','e',null,S.totTxt]);
-  tot.push(['K','f',[`SUM(K${r0}:K${rU})`, r2(filas.reduce((a,f)=>a+f.total,0))],S.tot]);
-  celdas(rT, tot, 20);
-
-  const anchos = [6,13,11,10,12,11,12,11,12,40,12];
-  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>
-<sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews>
-<sheetFormatPr defaultRowHeight="15"/>
-<cols>${anchos.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols>
-<sheetData>${filasXml.join('')}</sheetData>
-<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>
-<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="1"/>
-</worksheet>`;
-  const bordes = '<border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border>';
-  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00\\ &quot;€&quot;"/></numFmts>
-<fonts count="5">
-<font><sz val="11"/><name val="Calibri"/><family val="2"/></font>
-<font><b/><sz val="11"/><name val="Calibri"/><family val="2"/></font>
-<font><b/><sz val="26"/><color rgb="FF000000"/><name val="Calibri"/><family val="2"/></font>
-<font><b/><sz val="14"/><name val="Calibri"/><family val="2"/></font>
-<font><sz val="8"/><color rgb="FF555555"/><name val="Calibri"/><family val="2"/></font>
-</fonts>
-<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE2EFDA"/><bgColor indexed="64"/></patternFill></fill></fills>
-<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${bordes}</borders>
-<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="11">
-<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
-<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>
-<xf numFmtId="164" fontId="1" fillId="2" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>
-<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>
-<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>
-<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
-<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>
-<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>
-</cellXfs>
-<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
-</styleSheet>`;
-  const archivos = [
-    {name:'[Content_Types].xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`},
-    {name:'_rels/.rels', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
-    {name:'xl/workbook.xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Gastos" sheetId="1" r:id="rId1"/></sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`},
-    {name:'xl/_rels/workbook.xml.rels', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
-    {name:'xl/styles.xml', data:styles},
-    {name:'xl/worksheets/sheet1.xml', data:sheet},
-  ];
+  x = ponCelda(x, 'B'+FILA_TOTAL, 'cache', sumaB);
+  x = ponCelda(x, 'C'+FILA_TOTAL, 'cache', 0);
+  CATS.forEach(c=>{ x = ponCelda(x, c.col+FILA_TOTAL, 'cache', fmtNum(tot[c.id])); });
+  x = ponCelda(x, 'L'+FILA_TOTAL, 'cache', fmtNum(totalMes));
+  hoja.data = new TextEncoder().encode(x);
   return crearZip(archivos, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 }
-$('btnExcel').onclick = ()=>{
+function avisoRevisar(ym){
+  const n = TICKETS.filter(t=>t.estado==='pendiente').length + TICKETS.filter(t=>t.estado==='revisar' && t.fecha.slice(0,7)===ym).length;
+  return n ? ` (ojo: ${n} ${n===1?'ticket':'tickets'} sin revisar)` : '';
+}
+$('btnExcel').onclick = async ()=>{
   const ym = mesActual(); const [y,m] = ym.split('-').map(Number);
   if(!ticketsDelMes(ym).length){ toast('No hay tickets este mes'); return; }
-  descargar(generarExcel(ym), `Nota de Gastos Euroimmun ${MESES[m-1]} ${y}.xlsx`);
+  try{
+    descargar(await generarExcel(ym), `Nota de Gastos Euroimmun ${MESES[m-1]} ${y}.xlsx`);
+    toast('Excel generado'+avisoRevisar(ym), 3500);
+  }catch(e){ toast('Error: '+e.message, 5000); }
 };
 
 // ---------- PDF de justificantes ----------
-function pdfTexto(s){ // WinAnsi con escapes octales
+function pdfTexto(s){
   let o='';
   for(const ch of String(s)){
     let c = ch==='€' ? 128 : ch.charCodeAt(0);
@@ -636,15 +843,14 @@ function pdfTexto(s){ // WinAnsi con escapes octales
   }
   return '('+o+')';
 }
-async function generarPdf(items){ // {titulo, sub, jpeg:Uint8Array, w, h}
+async function generarPdf(items){
   const enc = new TextEncoder(); const trozos=[]; let len=0; const offs=[];
   const put = x=>{ const b = typeof x==='string' ? enc.encode(x) : x; trozos.push(b); len += b.length; };
   const obj = (id, ...cuerpo)=>{ offs[id]=len; put(id+' 0 obj\n'); cuerpo.forEach(put); put('\nendobj\n'); };
   put('%PDF-1.4\n'); put(new Uint8Array([37,226,227,207,211,10]));
   const n = items.length, total = 3 + 3*n;
-  const kids = items.map((_,i)=>(4+3*i)+' 0 R').join(' ');
   obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
-  obj(2, `<< /Type /Pages /Kids [${kids}] /Count ${n} >>`);
+  obj(2, `<< /Type /Pages /Kids [${items.map((_,i)=>(4+3*i)+' 0 R').join(' ')}] /Count ${n} >>`);
   obj(3, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
   items.forEach((it,i)=>{
     const pg=4+3*i, ct=5+3*i, im=6+3*i;
@@ -674,10 +880,9 @@ $('btnPdf').onclick = async ()=>{
     if(t._num) ultimoNum = t._num;
     let w=t.fotoW, h=t.fotoH;
     if(!w||!h){ const b=await createImageBitmap(t.foto); w=b.width; h=b.height; }
-    const d = t.fecha.split('-').reverse().join('/');
     items.push({
       titulo: t._num ? `Justificante nº ${t._num}` : `Justificante nº ${ultimoNum ?? '-'} (comisión, se suma)`,
-      sub: `${d}  ·  ${euros(t.importe)}  ·  ${t.comentario||''}`,
+      sub: `${fechaCorta(t.fecha)}  ·  ${euros(t.importe)}  ·  ${t.comentario||''}`,
       jpeg: new Uint8Array(await t.foto.arrayBuffer()), w, h
     });
   }
@@ -687,11 +892,13 @@ $('btnPdf').onclick = async ()=>{
 // ---------- Arranque ----------
 (async ()=>{
   $('mes').value = hoyISO().slice(0,7);
+  estadoRed();
   try{ await DB.abrir(); }catch(e){ $('lista').innerHTML='<div class="vacio">Este navegador no permite guardar datos.</div>'; return; }
   try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
   await recargar();
   if(!ajustes.key) toast('Configura tu clave de API en ⚙️ para leer tickets con IA', 4000);
   if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+  procesarPendientes();
 })();
 </script>
 </body>
