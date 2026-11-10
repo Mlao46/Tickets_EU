@@ -137,10 +137,12 @@
 
 <div class="barra">
   <button class="lateral" id="btnManual"><span>✍️</span>A mano</button>
-  <label class="fab" id="btnAnadir"><span>📷</span>Añadir ticket<input type="file" accept="image/*" multiple id="inFotos" hidden></label>
+  <button class="fab" id="btnAnadir"><span>📷</span>Añadir ticket</button>
   <button class="lateral" id="btnExportar"><span>📤</span>Exportar</button>
 </div>
 
+<input type="file" accept="image/*" capture="environment" id="inCamara" hidden>
+<input type="file" accept="image/*" multiple id="inFotos" hidden>
 <div id="toast"></div>
 <div id="ocupado"><div><span class="spin"></span><span id="ocupadoTxt">Un momento…</span></div></div>
 <datalist id="dlComentarios"></datalist>
@@ -179,6 +181,15 @@
   </div>
 </div></dialog>
 
+<!-- Añadir ticket -->
+<dialog id="dlgAnadir"><div class="dlg">
+  <div class="tirador"></div>
+  <h2>Añadir ticket</h2>
+  <button class="opcion" id="anCamara"><span>📷</span><div><b>Hacer foto</b><small>Abre la cámara directamente</small></div></button>
+  <button class="opcion" id="anGaleria"><span>🖼️</span><div><b>Elegir de la galería</b><small>Puedes elegir varias a la vez</small></div></button>
+  <div class="acc"><button class="btn" id="anCerrar">Cancelar</button></div>
+</div></dialog>
+
 <!-- Exportar -->
 <dialog id="dlgExportar"><div class="dlg">
   <div class="tirador"></div>
@@ -202,7 +213,7 @@
   <label class="campo">Apariencia</label>
   <div class="seg" id="segTema"><button data-v="oscuro">🌙 Oscuro</button><button data-v="claro">☀️ Claro</button><button data-v="sistema">📱 Sistema</button></div>
   <label class="campo" for="a_key">Clave de API de Claude</label>
-  <input id="a_key" type="password" autocomplete="off" placeholder="sk-ant-…">
+  <div style="display:flex;gap:8px"><input id="a_key" type="password" autocomplete="off" placeholder="sk-ant-…"><button class="btn peq" id="verKey" type="button" style="flex:none;width:54px">👁️</button></div>
   <div class="ayuda">Se guarda solo en este móvil. Se crea en platform.claude.com → API Keys.</div>
   <label class="campo" for="a_modelo">Modelo</label>
   <input id="a_modelo" autocomplete="off" list="dlModelos">
@@ -235,7 +246,7 @@
 
 <script>
 "use strict";
-const VERSION = '3.0';
+const VERSION = '3.1';
 // ---------- Configuración ----------
 // Mismo orden que las columnas del Excel (D..J). Dentro de un día los tickets se ordenan así.
 const CATS = [
@@ -718,7 +729,12 @@ $('btnBorrar').onclick = async ()=>{
 };
 $('btnReleer').onclick = ()=>{ if(editando?.foto){ tocados = new Set(); analizar(editando); } };
 
-// Un solo botón: Android ofrece Cámara o Fotos en el mismo menú
+// Un solo botón "Añadir ticket" → hoja con Hacer foto (cámara directa) o Galería (fotos directas)
+$('btnAnadir').onclick = ()=>$('dlgAnadir').showModal();
+$('anCerrar').onclick = ()=>$('dlgAnadir').close();
+$('anCamara').onclick = ()=>{ $('dlgAnadir').close(); $('inCamara').click(); };
+$('anGaleria').onclick = ()=>{ $('dlgAnadir').close(); $('inFotos').click(); };
+$('inCamara').onchange = e=>{ const f=e.target.files[0]; e.target.value=''; if(f){ cola=[]; nuevoDesdeFoto(f).catch(()=>toast('No se pudo abrir la foto')); } };
 $('inFotos').onchange = e=>{ const fs=[...e.target.files]; e.target.value=''; if(fs.length){ cola = fs; siguienteDeCola(); } };
 $('btnManual').onclick = ()=>{
   const ym = mesActual();
@@ -777,6 +793,7 @@ $('btnAjustes').onclick = ()=>{
   pintarAprendido(); aplicarTema();
   $('dlgAjustes').showModal();
 };
+$('verKey').onclick = ()=>{ const k=$('a_key'); k.type = k.type==='password' ? 'text' : 'password'; };
 $('btnCerrarAjustes').onclick = ()=>$('dlgAjustes').close();
 $('btnGuardarAjustes').onclick = ()=>{
   ajustes = {key:$('a_key').value.trim(), modelo:$('a_modelo').value.trim()||AJUSTES_DEF.modelo, oficina:$('a_oficina').value.trim(),
@@ -966,7 +983,7 @@ function ofrecerArchivo(blob, nombre, titulo){
   $('tituloExportar').textContent = titulo || 'Archivo listo';
   $('expNombre').textContent = '✅ ' + nombre;
   const f = new File([blob], nombre, {type: blob.type});
-  const puedeCompartir = !!(navigator.canShare && navigator.canShare({files:[f]}));
+  const puedeCompartir = !/Firefox\//.test(navigator.userAgent) && !!(navigator.canShare && navigator.canShare({files:[f]}));
   $('expCompartir').hidden = !puedeCompartir;
   $('expPaso1').hidden = true; $('expPaso2').hidden = false;
   if(!$('dlgExportar').open) $('dlgExportar').showModal();
@@ -1011,7 +1028,7 @@ $('expCompartir').onclick = async ()=>{
   if(!archivoListo) return;
   const f = new File([archivoListo.blob], archivoListo.nombre, {type: archivoListo.blob.type});
   try{ await navigator.share({files:[f], title:archivoListo.nombre}); }
-  catch(e){ if(e.name!=='AbortError') toast('No se pudo compartir: '+e.message, 5000); }
+  catch(e){ if(e.name!=='AbortError'){ descargar(new Blob([archivoListo.blob], {type:'application/octet-stream'}), archivoListo.nombre); toast('Este navegador no deja compartir: lo he guardado en Descargas', 5000); } }
 };
 $('expGuardar').onclick = ()=>{
   if(!archivoListo) return;
