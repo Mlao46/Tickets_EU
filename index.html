@@ -22,7 +22,7 @@
     --sombra:0 8px 24px rgba(0,0,0,.12);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{background:var(--bg)}
+  html,body{background:var(--bg);overscroll-behavior-y:none}
   body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--texto);padding-bottom:calc(120px + env(safe-area-inset-bottom))}
   button{font-family:inherit;color:inherit}
   /* Cabecera */
@@ -78,7 +78,10 @@
   dialog{border:0;padding:0;background:var(--card);color:var(--texto);width:100%;max-width:560px;max-height:92vh;margin:auto auto 0;border-radius:22px 22px 0 0}
   dialog::backdrop{background:rgba(0,0,0,.6)}
   .dlg{padding:10px 18px calc(18px + env(safe-area-inset-bottom));overflow:auto;max-height:92vh}
-  .tirador{width:40px;height:5px;border-radius:3px;background:var(--linea);margin:2px auto 12px}
+  .tirador{width:44px;height:5px;border-radius:3px;background:var(--suave);opacity:.5;margin:2px auto 12px}
+  .dlg{position:relative;overscroll-behavior:contain}
+  .cerrarX{position:absolute;top:10px;right:12px;width:38px;height:38px;border-radius:50%;border:1px solid var(--linea);background:var(--card2);font-size:16px;color:var(--suave);z-index:2}
+  dialog{transition:transform .2s ease}
   .dlg h2{margin:0 0 10px;font-size:19px}
   label.campo{display:block;font-size:13px;color:var(--suave);margin:12px 0 4px}
   .dlg input,.dlg select{width:100%;font-size:16px;padding:12px;border:1px solid var(--linea);border-radius:12px;background:var(--card2);color:var(--texto);font-family:inherit}
@@ -143,14 +146,14 @@
 
 <input type="file" accept="image/*" capture="environment" id="inCamara" hidden>
 <input type="file" accept="image/*" multiple id="inFotos" hidden>
-<input type="file" accept="application/pdf,.pdf,image/*" multiple id="inDocs" hidden>
+<input type="file" accept="application/pdf,.pdf" multiple id="inDocs" hidden>
 <div id="toast"></div>
 <div id="ocupado"><div><span class="spin"></span><span id="ocupadoTxt">Un momento…</span></div></div>
 <datalist id="dlComentarios"></datalist>
 
 <!-- Editor de ticket -->
 <dialog id="dlgTicket"><div class="dlg">
-  <div class="tirador"></div>
+  <div class="tirador"></div><button class="cerrarX" aria-label="Cerrar">✕</button>
   <h2 id="tituloTicket">Ticket</h2>
   <img id="fotoPrev" alt="Foto del ticket">
   <div id="estadoIA"></div>
@@ -184,17 +187,17 @@
 
 <!-- Añadir ticket -->
 <dialog id="dlgAnadir"><div class="dlg">
-  <div class="tirador"></div>
+  <div class="tirador"></div><button class="cerrarX" aria-label="Cerrar">✕</button>
   <h2>Añadir ticket</h2>
   <button class="opcion" id="anCamara"><span>📷</span><div><b>Hacer foto</b><small>Abre la cámara directamente</small></div></button>
   <button class="opcion" id="anGaleria"><span>🖼️</span><div><b>Elegir de la galería</b><small>Puedes elegir varias a la vez</small></div></button>
-  <button class="opcion" id="anDocs"><span>📄</span><div><b>Subir documento</b><small>PDF o imagen desde Descargas, Drive, correo…</small></div></button>
+  <button class="opcion" id="anDocs"><span>📄</span><div><b>Subir PDF</b><small>Facturas y recibos desde Descargas, Drive, correo…</small></div></button>
   <div class="acc"><button class="btn" id="anCerrar">Cancelar</button></div>
 </div></dialog>
 
 <!-- Exportar -->
 <dialog id="dlgExportar"><div class="dlg">
-  <div class="tirador"></div>
+  <div class="tirador"></div><button class="cerrarX" aria-label="Cerrar">✕</button>
   <h2 id="tituloExportar">Exportar</h2>
   <div id="expPaso1">
     <button class="opcion" id="expExcel"><span>📊</span><div><b>Nota de gastos (Excel)</b><small>Tu plantilla de Euroimmun rellena, lista para imprimir</small></div></button>
@@ -210,7 +213,7 @@
 
 <!-- Ajustes -->
 <dialog id="dlgAjustes"><div class="dlg">
-  <div class="tirador"></div>
+  <div class="tirador"></div><button class="cerrarX" aria-label="Cerrar">✕</button>
   <h2>Ajustes</h2>
   <label class="campo">Apariencia</label>
   <div class="seg" id="segTema"><button data-v="oscuro">🌙 Oscuro</button><button data-v="claro">☀️ Claro</button><button data-v="sistema">📱 Sistema</button></div>
@@ -259,7 +262,7 @@
 
 <script>
 "use strict";
-const VERSION = '3.2';
+const VERSION = '3.3';
 // ---------- Configuración ----------
 // Mismo orden que las columnas del Excel (D..J). Dentro de un día los tickets se ordenan así.
 const CATS = [
@@ -1081,6 +1084,30 @@ async function generarPdf(items){
   return new Blob(trozos, {type:'application/pdf'});
 }
 
+
+// ---------- Hojas: deslizar hacia abajo para cerrar, botón ✕ y tocar fuera ----------
+function cerrarHoja(dlg){ if(dlg.id==='dlgTicket'){ cola=[]; cerrarEditor(); } else dlg.close(); }
+document.querySelectorAll('dialog').forEach(dlg=>{
+  const panel = dlg.querySelector('.dlg');
+  dlg.querySelector('.cerrarX').onclick = ()=>cerrarHoja(dlg);
+  // Tocar fuera cierra (menos en el editor, para no perder lo que estás escribiendo)
+  if(dlg.id!=='dlgTicket') dlg.addEventListener('click', e=>{ if(e.target===dlg) cerrarHoja(dlg); });
+  let y0=null, dy=0;
+  panel.addEventListener('touchstart', e=>{
+    if(panel.scrollTop>0 || e.target.closest('input,select,textarea')){ y0=null; return; }
+    y0=e.touches[0].clientY; dy=0; dlg.style.transition='none';
+  }, {passive:true});
+  panel.addEventListener('touchmove', e=>{
+    if(y0===null) return; dy=e.touches[0].clientY-y0;
+    dlg.style.transform = dy>0 ? `translateY(${dy}px)` : '';
+  }, {passive:true});
+  panel.addEventListener('touchend', ()=>{
+    if(y0===null) return; y0=null;
+    dlg.style.transition='';
+    if(dy>100){ dlg.style.transform='translateY(100%)'; setTimeout(()=>{ cerrarHoja(dlg); dlg.style.transform=''; }, 180); }
+    else dlg.style.transform='';
+  });
+});
 
 // ---------- Exportar: generar y luego compartir o guardar ----------
 let archivoListo = null;

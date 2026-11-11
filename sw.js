@@ -1,6 +1,6 @@
 // Guarda la app en el móvil para que abra aunque no haya cobertura.
 // Siempre intenta primero la versión más nueva de GitHub (sin caché del navegador).
-const CACHE = 'tickets-v3-2';
+const CACHE = 'tickets-v3-3';
 const ARCHIVOS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './plantilla.xlsx', './pdfjs.js', './pdfjs.worker.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS.map(u => new Request(u, {cache: 'reload'}))))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
