@@ -189,9 +189,9 @@
 <dialog id="dlgAnadir"><div class="dlg">
   <div class="tirador"></div><button class="cerrarX" aria-label="Cerrar">✕</button>
   <h2>Añadir ticket</h2>
-  <button class="opcion" id="anCamara"><span>📷</span><div><b>Hacer foto</b><small>Abre la cámara directamente</small></div></button>
-  <button class="opcion" id="anGaleria"><span>🖼️</span><div><b>Elegir de la galería</b><small>Puedes elegir varias a la vez</small></div></button>
-  <button class="opcion" id="anDocs"><span>📄</span><div><b>Subir PDF</b><small>Facturas y recibos desde Descargas, Drive, correo…</small></div></button>
+  <button class="opcion" id="anCamara"><span>📷</span><div><b>Hacer foto</b></div></button>
+  <button class="opcion" id="anGaleria"><span>🖼️</span><div><b>Elegir de la galería</b></div></button>
+  <button class="opcion" id="anDocs"><span>📄</span><div><b>Subir PDF</b></div></button>
   <div class="acc"><button class="btn" id="anCerrar">Cancelar</button></div>
 </div></dialog>
 
@@ -262,7 +262,7 @@
 
 <script>
 "use strict";
-const VERSION = '3.3';
+const VERSION = '3.4';
 // ---------- Configuración ----------
 // Mismo orden que las columnas del Excel (D..J). Dentro de un día los tickets se ordenan así.
 const CATS = [
