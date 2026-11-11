@@ -143,6 +143,7 @@
 
 <input type="file" accept="image/*" capture="environment" id="inCamara" hidden>
 <input type="file" accept="image/*" multiple id="inFotos" hidden>
+<input type="file" accept="application/pdf,.pdf,image/*" multiple id="inDocs" hidden>
 <div id="toast"></div>
 <div id="ocupado"><div><span class="spin"></span><span id="ocupadoTxt">Un momento…</span></div></div>
 <datalist id="dlComentarios"></datalist>
@@ -170,7 +171,7 @@
     <option value="si">Sí, lleva su propio número</option>
     <option value="no">No: solo suma (comisión Telpark, etc.)</option>
   </select>
-  <div class="ayuda">En automático, la comisión de Telpark (el ticket pequeño de ese día) se suma pero no lleva número propio.</div>
+  <div class="ayuda">En automático, las comisiones de tus reglas (⚙️ → Reglas de comisión, p. ej. Telpark) se suman sin número propio.</div>
   <div class="acc">
     <button class="btn" id="btnCancelar">Cancelar</button>
     <button class="btn prim" id="btnGuardar">Guardar</button>
@@ -187,6 +188,7 @@
   <h2>Añadir ticket</h2>
   <button class="opcion" id="anCamara"><span>📷</span><div><b>Hacer foto</b><small>Abre la cámara directamente</small></div></button>
   <button class="opcion" id="anGaleria"><span>🖼️</span><div><b>Elegir de la galería</b><small>Puedes elegir varias a la vez</small></div></button>
+  <button class="opcion" id="anDocs"><span>📄</span><div><b>Subir documento</b><small>PDF o imagen desde Descargas, Drive, correo…</small></div></button>
   <div class="acc"><button class="btn" id="anCerrar">Cancelar</button></div>
 </div></dialog>
 
@@ -228,6 +230,17 @@
   <label class="campo" for="a_depto">Departamento</label><input id="a_depto">
   <div class="acc"><button class="btn" id="btnCerrarAjustes">Cerrar</button><button class="btn prim" id="btnGuardarAjustes">Guardar</button></div>
   <hr>
+  <b>Reglas de comisión</b>
+  <div class="ayuda">Para apps que cobran la comisión en un ticket aparte (como Telpark). Ese ticket pequeño se suma al pago principal del mismo día, sin nº de justificante propio.</div>
+  <div id="listaReglas"></div>
+  <div class="dos" style="grid-template-columns:2fr 1fr 1fr">
+    <div><label class="campo" for="r_texto">Texto del ticket</label><input id="r_texto" placeholder="EasyPark"></div>
+    <div><label class="campo" for="r_max">Máx. €</label><input id="r_max" inputmode="decimal" value="0,50"></div>
+    <div><label class="campo" for="r_pct">Máx. %</label><input id="r_pct" inputmode="numeric" value="50"></div>
+  </div>
+  <div class="ayuda">Cuenta como comisión si es menor que ese importe y que ese % del pago principal.</div>
+  <div class="acc"><button class="btn peq" id="btnAddRegla">➕ Añadir regla</button></div>
+  <hr>
   <b>Lo que ha aprendido</b>
   <div class="ayuda" id="aprendido">—</div>
   <hr>
@@ -246,7 +259,7 @@
 
 <script>
 "use strict";
-const VERSION = '3.1';
+const VERSION = '3.2';
 // ---------- Configuración ----------
 // Mismo orden que las columnas del Excel (D..J). Dentro de un día los tickets se ordenan así.
 const CATS = [
@@ -319,12 +332,21 @@ const listos = lista => lista.filter(t=>t.estado!=='pendiente' && t.fecha);
 function ticketsDelMes(ym){ return listos(TICKETS).filter(t=>t.fecha.slice(0,7)===ym); }
 // Orden: fecha → columna del Excel → orden manual
 function ordenar(lista){ return [...lista].sort((a,b)=> a.fecha<b.fecha?-1 : a.fecha>b.fecha?1 : ((CAT_IDX[a.categoria]??9)-(CAT_IDX[b.categoria]??9)) || (a.orden-b.orden)); }
-// La comisión de Telpark va en un ticket aparte, pequeño (0,10-0,40 €): se suma sin nº propio
-function esComisionTelpark(t, dia){
-  if(t.categoria!=='parking' || !esTelpark(t)) return false;
-  const otros = dia.filter(x=>x!==t && x.categoria==='parking' && esTelpark(x));
-  const max = otros.reduce((m,x)=>Math.max(m,x.importe||0),0);
-  return max>0 && (t.importe||0) < 0.5 && (t.importe||0) <= max*0.5;
+// Reglas de comisión (⚙️): apps que cobran la comisión en un ticket aparte.
+// Ese ticket pequeño se suma en la misma casilla, sin nº de justificante propio.
+const REGLAS_DEF = [{texto:'Telpark', max:0.5, pct:50}];
+function reglasActuales(){ return Array.isArray(ajustes.reglas) ? ajustes.reglas : REGLAS_DEF; }
+const textoTicket = t => normal((t.establecimiento||'')+' '+(t.comentario||'')+' '+(t.clave||''));
+function esComision(t, dia){
+  const imp = t.importe||0;
+  for(const r of reglasActuales()){
+    const k = normal(r.texto); if(!k) continue;
+    if(!textoTicket(t).includes(k)) continue;
+    const otros = dia.filter(x=>x!==t && x.categoria===t.categoria && textoTicket(x).includes(k));
+    const max = otros.reduce((m,x)=>Math.max(m,x.importe||0),0);
+    if(max>0 && imp < max && imp <= (Number(r.max)||0) && imp <= max*(Number(r.pct)||0)/100) return true;
+  }
+  return false;
 }
 function numerar(lista){
   const ord = ordenar(lista);
@@ -337,7 +359,7 @@ function numerar(lista){
       let v = true;
       if(t.numerar==='si') v = true;
       else if(t.numerar==='no') v = false;
-      else if(esComisionTelpark(t, dia)) v = false;
+      else if(esComision(t, dia)) v = false;
       lleva.set(t.id, v);
     });
   }
@@ -547,6 +569,37 @@ async function prepararFoto(file){
   return {blob, w:c.width, h:c.height};
 }
 
+// ---------- Documentos PDF ----------
+const esPdf = f => f && (f.type==='application/pdf' || /\.pdf$/i.test(f.name||''));
+let _pdfjs = null;
+async function cargarPdfjs(){
+  if(_pdfjs) return _pdfjs;
+  const base = new URL('./', location.href).href;
+  _pdfjs = await import(base+'pdfjs.js');
+  _pdfjs.GlobalWorkerOptions.workerSrc = base+'pdfjs.worker.js';
+  return _pdfjs;
+}
+const MAX_PAGINAS = 5;
+// Convierte cada página (hasta 5) en una imagen JPEG
+async function pdfAImagenes(file){
+  const pdfjs = await cargarPdfjs();
+  const doc = await pdfjs.getDocument({data: new Uint8Array(await file.arrayBuffer())}).promise;
+  const paginas = [];
+  try{
+    for(let i=1; i<=Math.min(doc.numPages, MAX_PAGINAS); i++){
+      const pag = await doc.getPage(i);
+      const v1 = pag.getViewport({scale:1});
+      const vp = pag.getViewport({scale: Math.min(3, 1400/Math.max(v1.width, v1.height))});
+      const c = document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+      const ctx = c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+      await pag.render({canvasContext:ctx, canvas:c, viewport:vp}).promise;
+      const blob = await new Promise(r=>c.toBlob(r,'image/jpeg',0.85));
+      paginas.push({blob, w:c.width, h:c.height});
+    }
+  } finally { try{ doc.destroy(); }catch(e){} }
+  return {paginas, total: doc.numPages};
+}
+
 // ---------- IA (Claude, llamada directa desde el móvil) ----------
 function promptIA(){
   const mem = [...memoria().values()].slice(-60);
@@ -561,13 +614,14 @@ Reglas:
 - clave: identificador corto y estable del sitio concreto para reconocerlo en el futuro. Para parkings incluye la zona, código o nombre del aparcamiento si aparece (p. ej. "Telpark zona B32", "Parking Fundación Jiménez Díaz"). Para el resto, establecimiento y ciudad (p. ej. "Restaurante El Bierzo, León").
 - comentario: muy breve, en el estilo de estos ejemplos: "Comida Oficina", "Comida León", "Cena León", "Desayuno y Comida Talavera", "Comida Gomez Ulla", "Parking Megalab", "Parking FJD", "Gasolina", "Taxi Valladolid". Para comidas usa desayuno (antes de las 11:30), comida (11:30-17:00) o cena (después) según la hora. Si es fuera de Madrid pon la ciudad; si es en Madrid pon el sitio (hospital, centro) o el establecimiento. Si la ciudad es una de estas: ${ajustes.oficina}, el comentario de una comida es "Comida Oficina".
 - Hospitales conocidos: Fundación Jiménez Díaz = FJD; Hospital Central de la Defensa Gómez Ulla = Gomez Ulla; Hospital Río Hortega = Rio Hortega.
-- es_comision: true solo si el ticket es únicamente una comisión o gasto de gestión aparte (Telpark cobra una comisión de unos céntimos en otro ticket).${hist}`;
+- es_comision: true solo si el ticket es únicamente una comisión o gasto de gestión aparte (estas apps cobran la comisión de unos céntimos en otro ticket: ${reglasActuales().map(r=>r.texto).join(', ')||'Telpark'}).${hist}`;
 }
 class ErrorRed extends Error {}
-async function leerTicketIA(fotoBlob){
+async function leerTicketIA(t){
   if(!ajustes.key) throw new Error('Falta la clave de API. Ponla en ⚙️ Ajustes o rellena a mano.');
   if(!navigator.onLine) throw new ErrorRed('sin conexión');
-  const data = await blobABase64(fotoBlob);
+  const esDoc = !!t.doc;
+  const data = await blobABase64(esDoc ? t.doc : t.foto);
   let resp;
   try{
     resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -582,7 +636,8 @@ async function leerTicketIA(fotoBlob){
         model: ajustes.modelo || AJUSTES_DEF.modelo,
         max_tokens: 2000,
         messages:[{role:'user', content:[
-          {type:'image', source:{type:'base64', media_type:'image/jpeg', data}},
+          esDoc ? {type:'document', source:{type:'base64', media_type:'application/pdf', data}}
+                : {type:'image', source:{type:'base64', media_type:'image/jpeg', data}},
           {type:'text', text: promptIA()}
         ]}]
       })
@@ -667,7 +722,7 @@ async function analizar(t){
   if(!navigator.onLine){ sinRed = true; estadoIA('📴 Sin conexión. Pulsa <b>Guardar</b> y la IA lo leerá sola cuando vuelva la cobertura (te avisaré).', 'pend'); return; }
   estadoIA('<span class="spin"></span>Leyendo el ticket con IA…');
   try{
-    const r = await leerTicketIA(t.foto);
+    const r = await leerTicketIA(t);
     if(miLectura!==leyendo || editando!==t) return;
     const datos = aplicarLectura(t, r);
     for(const k in datos){ const id=CAMPO_A[k]; if(!tocados.has(id)) ponCampo(id, k==='importe' ? fmtImp(datos[k]) : datos[k]); }
@@ -679,8 +734,24 @@ async function analizar(t){
   }
 }
 async function nuevoDesdeFoto(file){
-  const {blob,w,h} = await prepararFoto(file);
+  let blob, w, h, extra = [], doc = null;
+  if(esPdf(file)){
+    ocupado('Abriendo PDF…');
+    try{
+      const {paginas, total} = await pdfAImagenes(file);
+      if(!paginas.length) throw new Error('PDF vacío');
+      ({blob, w, h} = paginas[0]);
+      extra = paginas.slice(1);
+      doc = file.size < 20e6 ? new Blob([await file.arrayBuffer()], {type:'application/pdf'}) : null;
+      if(total > MAX_PAGINAS) toast(`El PDF tiene ${total} páginas: guardo las ${MAX_PAGINAS} primeras`, 4000);
+    } catch(e){ ocupado(false); toast('No se pudo abrir el PDF: '+(e.message||e), 5000); throw e; }
+    ocupado(false);
+  } else {
+    ({blob, w, h} = await prepararFoto(file));
+  }
   const t = {id:nuevoId(), fecha:'', importe:NaN, categoria:'comidas', comentario:'', establecimiento:'', ciudad:'', clave:'', numerar:'auto', foto:blob, fotoW:w, fotoH:h, orden:Date.now(), creado:Date.now()};
+  if(extra.length) t.fotosExtra = extra.map(p=>({blob:p.blob, w:p.w, h:p.h}));
+  if(doc) t.doc = doc;
   abrirEditor(t, true);
   analizar(t);
 }
@@ -734,6 +805,8 @@ $('btnAnadir').onclick = ()=>$('dlgAnadir').showModal();
 $('anCerrar').onclick = ()=>$('dlgAnadir').close();
 $('anCamara').onclick = ()=>{ $('dlgAnadir').close(); $('inCamara').click(); };
 $('anGaleria').onclick = ()=>{ $('dlgAnadir').close(); $('inFotos').click(); };
+$('anDocs').onclick = ()=>{ $('dlgAnadir').close(); $('inDocs').click(); };
+$('inDocs').onchange = e=>{ const fs=[...e.target.files]; e.target.value=''; if(fs.length){ cola = fs; siguienteDeCola(); } };
 $('inCamara').onchange = e=>{ const f=e.target.files[0]; e.target.value=''; if(f){ cola=[]; nuevoDesdeFoto(f).catch(()=>toast('No se pudo abrir la foto')); } };
 $('inFotos').onchange = e=>{ const fs=[...e.target.files]; e.target.value=''; if(fs.length){ cola = fs; siguienteDeCola(); } };
 $('btnManual').onclick = ()=>{
@@ -755,7 +828,7 @@ async function procesarPendientes(){
     for(const t of pend){
       if(editando && editando.id===t.id) continue;
       let r;
-      try{ r = await leerTicketIA(t.foto); }
+      try{ r = await leerTicketIA(t); }
       catch(e){ if(e instanceof ErrorRed) break; else continue; }
       const d = aplicarLectura(t, r);
       Object.assign(t, d);
@@ -790,13 +863,38 @@ matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', aplicar
 $('btnAjustes').onclick = ()=>{
   $('a_key').value=ajustes.key; $('a_modelo').value=ajustes.modelo; $('a_oficina').value=ajustes.oficina;
   $('a_apellidos').value=ajustes.apellidos; $('a_nombre').value=ajustes.nombre; $('a_depto').value=ajustes.depto;
-  pintarAprendido(); aplicarTema();
+  pintarAprendido(); pintarReglas(); aplicarTema();
   $('dlgAjustes').showModal();
+};
+function pintarReglas(){
+  const cont = $('listaReglas'); cont.innerHTML='';
+  const rs = reglasActuales();
+  if(!rs.length){ cont.innerHTML='<div class="ayuda">Sin reglas.</div>'; return; }
+  rs.forEach((r,i)=>{
+    const d = document.createElement('div'); d.className='opcion'; d.style.padding='10px 12px';
+    const tx = document.createElement('div'); tx.style.flex='1';
+    const b = document.createElement('b'); b.textContent = r.texto;
+    const sm = document.createElement('small'); sm.textContent = `Comisión hasta ${euros(r.max)} y hasta el ${r.pct} % del pago`;
+    tx.append(b, sm);
+    const del = document.createElement('button'); del.className='btn peq rojo'; del.style.flex='none'; del.textContent='🗑️'; del.setAttribute('aria-label','Borrar regla');
+    del.onclick = ()=>{ if(!confirm('¿Borrar la regla '+r.texto+'?')) return; const n=[...rs]; n.splice(i,1); ajustes.reglas=n; guardarAjustesLS(ajustes); pintarReglas(); pintar(); };
+    d.append(tx, del); cont.appendChild(d);
+  });
+}
+$('btnAddRegla').onclick = ()=>{
+  const texto = $('r_texto').value.trim();
+  const max = parseImporte($('r_max').value), pct = parseFloat(String($('r_pct').value).replace(',','.'));
+  if(!texto){ toast('Pon el texto que aparece en el ticket'); $('r_texto').focus(); return; }
+  if(isNaN(max) || max<=0){ toast('Pon un importe máximo'); return; }
+  if(isNaN(pct) || pct<=0 || pct>100){ toast('Pon un % entre 1 y 100'); return; }
+  const rs = reglasActuales().filter(r=>normal(r.texto)!==normal(texto));
+  ajustes.reglas = [...rs, {texto, max, pct}]; guardarAjustesLS(ajustes);
+  $('r_texto').value=''; pintarReglas(); pintar(); toast('Regla guardada');
 };
 $('verKey').onclick = ()=>{ const k=$('a_key'); k.type = k.type==='password' ? 'text' : 'password'; };
 $('btnCerrarAjustes').onclick = ()=>$('dlgAjustes').close();
 $('btnGuardarAjustes').onclick = ()=>{
-  ajustes = {key:$('a_key').value.trim(), modelo:$('a_modelo').value.trim()||AJUSTES_DEF.modelo, oficina:$('a_oficina').value.trim(),
+  ajustes = {...ajustes, key:$('a_key').value.trim(), modelo:$('a_modelo').value.trim()||AJUSTES_DEF.modelo, oficina:$('a_oficina').value.trim(),
              apellidos:$('a_apellidos').value.trim(), nombre:$('a_nombre').value.trim(), depto:$('a_depto').value.trim(), tema:temaElegido};
   guardarAjustesLS(ajustes); $('dlgAjustes').close(); toast('Ajustes guardados'); procesarPendientes();
 };
@@ -804,8 +902,14 @@ $('btnBackup').onclick = async ()=>{
   ocupado('Preparando copia…');
   try{
     const out = [];
-    for(const t of TICKETS){ const c={...t}; delete c._num; if(c.foto) c.foto = await blobADataURL(c.foto); out.push(c); }
-    const blob = new Blob([JSON.stringify({app:'tickets-gastos', version:3, fecha:new Date().toISOString(), tickets:out})],{type:'application/json'});
+    for(const t of TICKETS){
+      const c={...t}; delete c._num;
+      if(c.foto) c.foto = await blobADataURL(c.foto);
+      if(c.doc) c.doc = await blobADataURL(c.doc);
+      if(c.fotosExtra) c.fotosExtra = await Promise.all(c.fotosExtra.map(async p=>({...p, blob: await blobADataURL(p.blob)})));
+      out.push(c);
+    }
+    const blob = new Blob([JSON.stringify({app:'tickets-gastos', version:4, fecha:new Date().toISOString(), reglas:reglasActuales(), tickets:out})],{type:'application/json'});
     ocupado(false); $('dlgAjustes').close();
     ofrecerArchivo(blob, 'copia-tickets-'+hoyISO()+'.json', 'Copia de seguridad');
   }finally{ ocupado(false); }
@@ -815,7 +919,14 @@ $('inBackup').onchange = async e=>{
   try{
     const j = JSON.parse(await f.text());
     let n=0;
-    for(const t of (j.tickets||[])){ if(t.foto && typeof t.foto==='string') t.foto = await (await fetch(t.foto)).blob(); await DB.guardar(t); n++; }
+    const aBlob = async u => (await fetch(u)).blob();
+    for(const t of (j.tickets||[])){
+      if(t.foto && typeof t.foto==='string') t.foto = await aBlob(t.foto);
+      if(t.doc && typeof t.doc==='string') t.doc = await aBlob(t.doc);
+      if(Array.isArray(t.fotosExtra)) for(const p of t.fotosExtra){ if(typeof p.blob==='string') p.blob = await aBlob(p.blob); }
+      await DB.guardar(t); n++;
+    }
+    if(Array.isArray(j.reglas) && j.reglas.length){ ajustes.reglas = j.reglas; guardarAjustesLS(ajustes); }
     await recargar(); toast(n+' tickets importados');
   }catch(err){ toast('Copia no válida'); }
 };
@@ -1012,12 +1123,14 @@ $('expPdf').onclick = async ()=>{
     for(const t of ord){
       if(t._num) ultimoNum = t._num;
       // Se vuelve a pasar cada foto por JPEG estándar: así el PDF nunca falla por formatos raros
-      const {blob, w, h} = await prepararFoto(t.foto);
-      items.push({
-        titulo: t._num ? `Justificante nº ${t._num}` : `Justificante nº ${ultimoNum ?? '-'} (comisión, se suma)`,
-        sub: `${fechaCorta(t.fecha)}  ·  ${euros(t.importe)}  ·  ${t.comentario||''}`,
-        jpeg: new Uint8Array(await blob.arrayBuffer()), w, h
-      });
+      const titulo = t._num ? `Justificante nº ${t._num}` : `Justificante nº ${ultimoNum ?? '-'} (comisión, se suma)`;
+      const sub = `${fechaCorta(t.fecha)}  ·  ${euros(t.importe)}  ·  ${t.comentario||''}`;
+      const imagenes = [t.foto, ...((t.fotosExtra||[]).map(p=>p.blob))];
+      for(let k=0; k<imagenes.length; k++){
+        const {blob, w, h} = await prepararFoto(imagenes[k]);
+        items.push({ titulo: titulo + (imagenes.length>1 ? ` (pág. ${k+1}/${imagenes.length})` : ''), sub,
+                     jpeg: new Uint8Array(await blob.arrayBuffer()), w, h });
+      }
     }
     const pdf = await generarPdf(items);
     ocupado(false);
